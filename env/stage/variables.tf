@@ -179,3 +179,36 @@ variable "frontend_url" {
   type        = string
   default     = "https://dummy-frontend.example.com"
 }
+
+# ------------------------------------------------------------------------------
+# Phase Enablement Flags (Feature Flags)
+# ------------------------------------------------------------------------------
+variable "enable_vpc" {
+  description = "Enable Cloud Foundation VPC and networking resources"
+  type        = bool
+  default     = true
+}
+
+variable "enable_ecr" {
+  description = "Enable Phase 2 Container Registry (ECR)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_ecs" {
+  description = "Enable Phase 3 Container Platform (ECS)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_alb" {
+  description = "Enable Phase 4 Application Load Balancer (ALB)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_codedeploy" {
+  description = "Enable Phase 5 Deployment Platform (CodeDeploy)"
+  type        = bool
+  default     = false
+}

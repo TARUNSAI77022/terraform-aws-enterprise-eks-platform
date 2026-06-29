@@ -2,6 +2,7 @@
 # 1. Enterprise VPC Module (Foundation)
 # ------------------------------------------------------------------------------
 module "vpc" {
+  count  = var.enable_vpc ? 1 : 0
   source = "../../modules/vpc"
 
   project_name          = var.project_name
@@ -35,9 +36,10 @@ module "vpc" {
 # 2. Enterprise Security Groups Module
 # ------------------------------------------------------------------------------
 module "security_groups" {
+  count  = var.enable_vpc ? 1 : 0
   source = "../../modules/security-groups"
 
-  vpc_id       = module.vpc.vpc_id
+  vpc_id       = module.vpc[0].vpc_id
   project_name = var.project_name
   environment  = var.environment
 
@@ -54,18 +56,20 @@ module "security_groups" {
 # 3. Application Load Balancer Module
 # ------------------------------------------------------------------------------
 module "alb" {
+  count  = var.enable_alb ? 1 : 0
   source = "../../modules/alb"
 
   project_name      = var.project_name
   environment       = var.environment
-  vpc_id            = module.vpc.vpc_id
-  public_subnet_ids = module.vpc.public_subnet_ids
+  vpc_id            = var.enable_vpc ? module.vpc[0].vpc_id : ""
+  public_subnet_ids = var.enable_vpc ? module.vpc[0].public_subnet_ids : []
 }
 
 # ------------------------------------------------------------------------------
 # 4. ECR Repository Module
 # ------------------------------------------------------------------------------
 module "ecr" {
+  count  = var.enable_ecr ? 1 : 0
   source = "../../modules/ecr"
 
   project_name = var.project_name
@@ -76,26 +80,27 @@ module "ecr" {
 # 5. ECS Compute Module
 # ------------------------------------------------------------------------------
 module "ecs" {
+  count  = var.enable_ecs ? 1 : 0
   source = "../../modules/ecs"
 
   project_name = var.project_name
   environment  = var.environment
   aws_region   = var.aws_region
-  vpc_id       = module.vpc.vpc_id
+  vpc_id       = var.enable_vpc ? module.vpc[0].vpc_id : ""
 
   # ECS tasks run securely in private subnets
-  private_subnet_ids = module.vpc.private_subnet_ids
+  private_subnet_ids = var.enable_vpc ? module.vpc[0].private_subnet_ids : []
 
   # Bind to the central unified application security group
-  security_group_ids = [module.security_groups.app_node_sg_id]
+  security_group_ids = var.enable_vpc ? [module.security_groups[0].app_node_sg_id] : []
 
   container_name   = "app-container"
   container_port   = 5000
-  container_image  = "${module.ecr.repository_url}:latest"
+  container_image  = var.enable_ecr ? "${module.ecr[0].repository_url}:latest" : "placeholder-image:latest"
   desired_count    = 2
   cpu              = 512
   memory           = 1024
-  target_group_arn = module.alb.alb_target_group_blue_arn
+  target_group_arn = var.enable_alb ? module.alb[0].alb_target_group_blue_arn : ""
 
   mongo_uri    = var.mongo_uri
   jwt_secret   = var.jwt_secret
@@ -105,20 +110,21 @@ module "ecs" {
   frontend_url = var.frontend_url
 
   # Backward compatible parameter
-  alb_security_group_id = module.alb.alb_security_group_id
+  alb_security_group_id = var.enable_alb ? module.alb[0].alb_security_group_id : ""
 }
 
 # ------------------------------------------------------------------------------
 # 6. Blue/Green CodeDeploy Deployment Module
 # ------------------------------------------------------------------------------
 module "codedeploy" {
+  count  = var.enable_codedeploy ? 1 : 0
   source = "../../modules/codedeploy"
 
   project_name            = var.project_name
   environment             = var.environment
-  ecs_cluster_name        = module.ecs.ecs_cluster_name
-  ecs_service_name        = module.ecs.ecs_service_name
-  alb_listener_arn        = module.alb.alb_listener_arn
-  blue_target_group_name  = module.alb.alb_target_group_blue_name
-  green_target_group_name = module.alb.alb_target_group_green_name
+  ecs_cluster_name        = var.enable_ecs ? module.ecs[0].ecs_cluster_name : ""
+  ecs_service_name        = var.enable_ecs ? module.ecs[0].ecs_service_name : ""
+  alb_listener_arn        = var.enable_alb ? module.alb[0].alb_listener_arn : ""
+  blue_target_group_name  = var.enable_alb ? module.alb[0].alb_target_group_blue_name : ""
+  green_target_group_name = var.enable_alb ? module.alb[0].alb_target_group_green_name : ""
 }

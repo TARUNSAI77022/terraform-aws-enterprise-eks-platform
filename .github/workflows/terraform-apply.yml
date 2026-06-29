@@ -10,8 +10,8 @@ on:
         type: choice
         options:
           - dev
-          - stage
-          - prod
+          # - stage
+          # - prod
       run_id:
         description: 'Run ID of the Plan workflow that generated the tfplan artifact'
         required: true

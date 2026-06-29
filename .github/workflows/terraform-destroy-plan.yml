@@ -10,8 +10,8 @@ on:
         type: choice
         options:
           - dev
-          - stage
-          - prod
+          # - stage
+          # - prod
       destroy_confirm:
         description: 'Type confirmation code (Dev: YES | Stage: DESTROY-STAGE | Prod: DESTROY-PROD)'
         required: true

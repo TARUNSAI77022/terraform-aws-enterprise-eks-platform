@@ -12,8 +12,8 @@ on:
         type: choice
         options:
           - dev
-          - stage
-          - prod
+          # - stage
+          # - prod
 
 permissions:
   id-token: write
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', github.event.inputs.environment)) || fromJSON('["dev", "stage", "prod"]') }}
+        environment: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', github.event.inputs.environment)) || fromJSON('["dev"]') }}
 
     steps:
     - name: Checkout repository

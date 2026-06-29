@@ -140,14 +140,8 @@ variable "backup" {
 }
 
 # ------------------------------------------------------------------------------
-# Phase Enablement Flags (Feature Flags)
+# Phase Ingress Configuration
 # ------------------------------------------------------------------------------
-variable "enable_vpc" {
-  description = "Enable Cloud Foundation VPC and networking resources"
-  type        = bool
-  default     = true
-}
-
 variable "alb_ingress_cidr_blocks" {
   description = "Allowed CIDR blocks for ingress to the Application Load Balancer"
   type        = list(string)

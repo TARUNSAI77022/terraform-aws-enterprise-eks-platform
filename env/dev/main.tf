@@ -5,11 +5,10 @@ locals {
   # ----------------------------------------------------------------------------
   # Phase Enablement Flags (Statically configured for Phase 1 - Cloud Foundation)
   # ----------------------------------------------------------------------------
-  enable_ecr         = false
-  enable_ecs         = false
-  enable_alb         = false
-  enable_codedeploy  = false
-  enable_autoscaling = false
+  enable_ecr        = false
+  enable_ecs        = false
+  enable_alb        = false
+  enable_codedeploy = false
 
   # ----------------------------------------------------------------------------
   # Application Placeholders (Relocated from variables.tf)

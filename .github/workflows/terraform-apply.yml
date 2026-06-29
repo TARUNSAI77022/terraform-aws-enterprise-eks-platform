@@ -30,6 +30,9 @@ jobs:
   apply:
     name: 'Terraform Apply'
     runs-on: ubuntu-latest
+    concurrency:
+      group: terraform-pipeline-${{ inputs.environment }}
+      cancel-in-progress: false
     # Binds to the GitHub Environment to enforce approvals and retrieve secrets
     environment: ${{ inputs.environment }}
 
@@ -70,18 +73,38 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path: .
 
-    - name: Debug Artifact Recovery
-      run: |
-        echo "=== Current working directory ==="
-        pwd
-        echo "=== Listing files recursively ==="
-        find . -maxdepth 4 -not -path '*/.*'
-        echo "=== Search for tfplan ==="
-        find . -name tfplan
-
     - name: Terraform Init
       working-directory: ./env/${{ inputs.environment }}
       run: terraform init -input=false -reconfigure
+
+    - name: Terraform Pre-flight Validation
+      working-directory: ./env/${{ inputs.environment }}
+      run: |
+        echo "=== Pinned CLI Versions ==="
+        terraform version
+        echo "=== Current Terraform Workspace ==="
+        terraform workspace show
+        echo "=== Backend Configuration ==="
+        cat backend.tf
+        echo "=== Provider Configurations ==="
+        terraform providers
+
+    - name: Validate Plan Freshness
+      working-directory: ./env/${{ inputs.environment }}
+      run: |
+        echo "=== Checking tfplan binary file ==="
+        if [ ! -f tfplan ]; then
+          echo "ERROR: tfplan file was not successfully downloaded or does not exist!"
+          exit 1
+        fi
+        echo "=== Validating plan compatibility with remote state ==="
+        if ! terraform show -json tfplan >/dev/null; then
+          echo "ERROR: The downloaded plan file is stale or invalid compared to the current remote state."
+          echo "This means the state was modified in the backend after this plan was generated."
+          echo "Please trigger a fresh Terraform Plan workflow run and deploy using the new run ID."
+          exit 1
+        fi
+        echo "Plan validation successful!"
 
     - name: Terraform Apply
       working-directory: ./env/${{ inputs.environment }}

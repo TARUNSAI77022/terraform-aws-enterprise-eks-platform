@@ -28,6 +28,9 @@ jobs:
   plan:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
+    concurrency:
+      group: terraform-pipeline-${{ matrix.environment }}
+      cancel-in-progress: false
     strategy:
       matrix:
         environment: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', github.event.inputs.environment)) || fromJSON('["dev"]') }}
@@ -65,13 +68,25 @@ jobs:
       working-directory: ./env/${{ matrix.environment }}
       run: terraform init -input=false -reconfigure
 
-    - name: Terraform Plan Binary
+    - name: Terraform Pre-flight Validation
+      working-directory: ./env/${{ matrix.environment }}
+      run: |
+        echo "=== Pinned CLI Versions ==="
+        terraform version
+        echo "=== Current Terraform Workspace ==="
+        terraform workspace show
+        echo "=== Backend Configuration ==="
+        cat backend.tf
+        echo "=== Provider Configurations ==="
+        terraform providers
+
+    - name: Terraform Plan
       working-directory: ./env/${{ matrix.environment }}
       run: terraform plan -no-color -out=tfplan -input=false
 
     - name: Terraform Plan Text
       working-directory: ./env/${{ matrix.environment }}
-      run: terraform plan -no-color -input=false > terraform-plan.txt
+      run: terraform show -no-color tfplan > terraform-plan.txt
       continue-on-error: true
 
     # Setup Infracost for Monthly Cost Estimation

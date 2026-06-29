@@ -27,7 +27,7 @@ env:
   TF_IN_AUTOMATION: "true"
 
 concurrency:
-  group: terraform-pipeline-${{ inputs.environment || github.event.inputs.environment }}
+  group: terraform-pipeline-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
@@ -42,8 +42,8 @@ jobs:
 
     - name: Validate Confirmation Code
       run: |
-        ENV="${{ github.event.inputs.environment }}"
-        CONFIRM="${{ github.event.inputs.destroy_confirm }}"
+        ENV="${{ inputs.environment }}"
+        CONFIRM="${{ inputs.destroy_confirm }}"
         
         if [ "$ENV" = "dev" ] && [ "$CONFIRM" != "YES" ]; then
           echo "::error::Validation Failed: Dev environment requires confirmation code: YES"
@@ -83,12 +83,24 @@ jobs:
         terraform_version: 1.5.0
 
     - name: Terraform Init
-      working-directory: ./env/${{ github.event.inputs.environment }}
+      working-directory: ./env/${{ inputs.environment }}
       run: terraform init -input=false -reconfigure
+
+    - name: Terraform Pre-flight Validation
+      working-directory: ./env/${{ inputs.environment }}
+      run: |
+        echo "=== Pinned CLI Versions ==="
+        terraform version
+        echo "=== Current Terraform Workspace ==="
+        terraform workspace show
+        echo "=== Backend Configuration ==="
+        cat backend.tf
+        echo "=== Provider Configurations ==="
+        terraform providers
 
     # State Protection Rule: check state health and generate backup reference
     - name: Backend Health Check & State Backup
-      working-directory: ./env/${{ github.event.inputs.environment }}
+      working-directory: ./env/${{ inputs.environment }}
       run: |
         echo "Verifying remote state health (S3/DynamoDB)..."
         terraform state list
@@ -96,18 +108,18 @@ jobs:
         terraform state pull > state-backup.json
 
     - name: Generate Destroy Plan Binary
-      working-directory: ./env/${{ github.event.inputs.environment }}
+      working-directory: ./env/${{ inputs.environment }}
       run: terraform plan -destroy -no-color -out=tfplan-destroy -input=false
 
     - name: Generate Plaintext Destroy Plan
-      working-directory: ./env/${{ github.event.inputs.environment }}
+      working-directory: ./env/${{ inputs.environment }}
       run: terraform show -no-color tfplan-destroy > plan-destroy.txt
       continue-on-error: true
 
     - name: Set Artifact Retention
       id: retention
       run: |
-        ENV="${{ github.event.inputs.environment }}"
+        ENV="${{ inputs.environment }}"
         if [ "$ENV" = "prod" ]; then
           echo "days=30" >> $GITHUB_OUTPUT
         elif [ "$ENV" = "stage" ]; then
@@ -119,23 +131,23 @@ jobs:
     - name: Upload Destroy Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: tfplan-destroy-${{ github.event.inputs.environment }}
+        name: tfplan-destroy-${{ inputs.environment }}
         path: |
-          env/${{ github.event.inputs.environment }}/tfplan-destroy
-          env/${{ github.event.inputs.environment }}/plan-destroy.txt
-          env/${{ github.event.inputs.environment }}/state-backup.json
+          env/${{ inputs.environment }}/tfplan-destroy
+          env/${{ inputs.environment }}/plan-destroy.txt
+          env/${{ inputs.environment }}/state-backup.json
         retention-days: ${{ steps.retention.outputs.days }}
 
     - name: Generate Job Summary
       run: |
-        echo "### ⚠️ Terraform Destroy Plan Generated - ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "### ⚠️ Terraform Destroy Plan Generated - ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Terraform Version**: 1.5.0" >> $GITHUB_STEP_SUMMARY
-        echo "- **Target Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Target Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
         echo "- **State Backup**: Created and archived" >> $GITHUB_STEP_SUMMARY
         echo "- **Artifact Retention**: ${{ steps.retention.outputs.days }} Days" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "#### Destruction Summary" >> $GITHUB_STEP_SUMMARY
         echo "```text" >> $GITHUB_STEP_SUMMARY
-        tail -n 25 env/${{ github.event.inputs.environment }}/plan-destroy.txt >> $GITHUB_STEP_SUMMARY
+        tail -n 25 env/${{ inputs.environment }}/plan-destroy.txt >> $GITHUB_STEP_SUMMARY
         echo "```" >> $GITHUB_STEP_SUMMARY
       continue-on-error: true

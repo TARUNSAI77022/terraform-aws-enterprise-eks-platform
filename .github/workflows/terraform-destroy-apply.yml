@@ -27,7 +27,7 @@ env:
   TF_IN_AUTOMATION: "true"
 
 concurrency:
-  group: terraform-pipeline-${{ inputs.environment || github.event.inputs.environment }}
+  group: terraform-pipeline-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     # Bind to GitHub Environment to enforce approvals and retrieve credentials
-    environment: ${{ inputs.environment || github.event.inputs.environment }}
+    environment: ${{ inputs.environment }}
 
     steps:
     - name: Checkout repository
@@ -74,8 +74,8 @@ jobs:
     - name: Download Destroy Plan Artifact
       uses: actions/download-artifact@v4
       with:
-        name: tfplan-destroy-${{ github.event.inputs.environment }}
-        run-id: ${{ github.event.inputs.run_id }}
+        name: tfplan-destroy-${{ inputs.environment }}
+        run-id: ${{ inputs.run_id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path: .
 
@@ -89,11 +89,11 @@ jobs:
         find . -name tfplan-destroy
 
     - name: Terraform Init
-      working-directory: ./env/${{ github.event.inputs.environment }}
+      working-directory: ./env/${{ inputs.environment }}
       run: terraform init -input=false -reconfigure
 
     - name: Terraform Pre-flight Validation
-      working-directory: ./env/${{ github.event.inputs.environment }}
+      working-directory: ./env/${{ inputs.environment }}
       run: |
         echo "=== Pinned CLI Versions ==="
         terraform version
@@ -105,7 +105,7 @@ jobs:
         terraform providers
 
     - name: Validate Plan Freshness
-      working-directory: ./env/${{ github.event.inputs.environment }}
+      working-directory: ./env/${{ inputs.environment }}
       run: |
         echo "=== Checking tfplan-destroy binary file ==="
         if [ ! -f tfplan-destroy ]; then
@@ -122,7 +122,7 @@ jobs:
         echo "Plan validation successful!"
 
     - name: Terraform Apply Destroy
-      working-directory: ./env/${{ github.event.inputs.environment }}
+      working-directory: ./env/${{ inputs.environment }}
       run: terraform apply -input=false tfplan-destroy
 
     - name: Calculate Duration
@@ -137,17 +137,17 @@ jobs:
 
     - name: Generate Destroy Summary
       run: |
-        echo "### 🛑 Terraform Destroy Apply Execution Report - ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "### 🛑 Terraform Destroy Apply Execution Report - ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
         echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Environment** | \`${{ github.event.inputs.environment }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Environment** | \`${{ inputs.environment }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **Terraform Version** | \`1.5.0\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **AWS Region** | \`ap-south-1\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **Backend Used** | \`S3 (terraform-aws-enterprise-state)\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **State Lock Status** | \`DynamoDB (terraform-state-lock)\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **Approval Status** | \`Approved by environment reviewer\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Source Plan Run ID** | \`${{ github.event.inputs.run_id }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Source Plan Run ID** | \`${{ inputs.run_id }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **Execution Duration** | \`${{ steps.duration.outputs.formatted }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **Teardown Result** | **SUCCESS - Resources Destroyed** |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY

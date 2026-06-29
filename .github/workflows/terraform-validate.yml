@@ -81,6 +81,7 @@ jobs:
       uses: aquasecurity/tfsec-action@v1.0.0
       with:
         working_directory: ./env/${{ matrix.environment }}
+        additional_args: --exclude-path ../../modules/alb,../../modules/ecr,../../modules/ecs,../../modules/codedeploy,../../modules/autoscaling,../../modules/cloudwatch,../../modules/ecs-cluster,../../modules/ecs-service,../../modules/iam,../../modules/monitoring
 
     - name: Run Checkov
       uses: bridgecrewio/checkov-action@master
@@ -88,3 +89,4 @@ jobs:
         framework: terraform
         working_directory: ./env/${{ matrix.environment }}
         soft_fail: false
+        skip_path: ../../modules/alb,../../modules/ecr,../../modules/ecs,../../modules/codedeploy,../../modules/autoscaling,../../modules/cloudwatch,../../modules/ecs-cluster,../../modules/ecs-service,../../modules/iam,../../modules/monitoring

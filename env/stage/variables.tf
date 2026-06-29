@@ -212,3 +212,9 @@ variable "enable_codedeploy" {
   type        = bool
   default     = false
 }
+
+variable "alb_ingress_cidr_blocks" {
+  description = "Allowed CIDR blocks for ingress to the Application Load Balancer"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}

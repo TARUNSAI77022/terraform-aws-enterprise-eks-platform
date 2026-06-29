@@ -13,6 +13,13 @@ locals {
 }
 
 # ------------------------------------------------------------------------------
+# Data Source to fetch VPC CIDR Block
+# ------------------------------------------------------------------------------
+data "aws_vpc" "selected" {
+  id = var.vpc_id
+}
+
+# ------------------------------------------------------------------------------
 # 1. Application Load Balancer (ALB) Security Group
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "alb_sg" {
@@ -20,28 +27,30 @@ resource "aws_security_group" "alb_sg" {
   description = "Security group for public Application Load Balancer"
   vpc_id      = var.vpc_id
 
+  # tfsec:ignore:aws-ec2-no-public-ingress-sgr
   ingress {
     description = "Allow HTTP public traffic"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.alb_ingress_cidr_blocks
   }
 
+  # tfsec:ignore:aws-ec2-no-public-ingress-sgr
   ingress {
     description = "Allow HTTPS public traffic"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.alb_ingress_cidr_blocks
   }
 
   egress {
-    description = "Allow outbound to application nodes"
+    description = "Allow outbound to application nodes within the VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"] # Can be restricted to app_node_sg in env setups if needed
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   tags = merge(
@@ -80,10 +89,28 @@ resource "aws_security_group" "app_node_sg" {
 
   # Outbound rules (Least privilege egress)
   egress {
-    description = "Allow outbound traffic to internet via NAT"
+    description = "Allow internal communication within the VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
+  }
+
+  # tfsec:ignore:aws-ec2-no-public-egress-sgr
+  egress {
+    description = "Allow HTTPS outbound to internet for updates and AWS APIs"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # tfsec:ignore:aws-ec2-no-public-egress-sgr
+  egress {
+    description = "Allow HTTP outbound to internet for updates"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -106,10 +133,28 @@ resource "aws_security_group" "ssm_bastion_sg" {
   # No ingress ports open! (SSM Agent makes outbound connections only)
 
   egress {
-    description = "Allow all outbound traffic for SSM Agent and updates"
+    description = "Allow outbound internal communication within the VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
+  }
+
+  # tfsec:ignore:aws-ec2-no-public-egress-sgr
+  egress {
+    description = "Allow HTTPS outbound to SSM endpoints and AWS APIs"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # tfsec:ignore:aws-ec2-no-public-egress-sgr
+  egress {
+    description = "Allow HTTP outbound to internet for updates"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 

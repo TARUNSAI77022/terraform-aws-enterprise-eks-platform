@@ -63,3 +63,9 @@ variable "backup" {
   type        = string
   default     = "Daily"
 }
+
+variable "alb_ingress_cidr_blocks" {
+  description = "Allowed CIDR blocks for ingress to the Application Load Balancer"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}

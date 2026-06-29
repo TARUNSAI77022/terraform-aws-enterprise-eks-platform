@@ -18,11 +18,11 @@ resource "aws_security_group" "vpc_endpoints" {
   }
 
   egress {
-    description = "Allow all outbound traffic"
+    description = "Allow outbound traffic within the VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   tags = merge(

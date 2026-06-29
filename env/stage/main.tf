@@ -39,9 +39,10 @@ module "security_groups" {
   count  = var.enable_vpc ? 1 : 0
   source = "../../modules/security-groups"
 
-  vpc_id       = module.vpc[0].vpc_id
-  project_name = var.project_name
-  environment  = var.environment
+  vpc_id                  = module.vpc[0].vpc_id
+  project_name            = var.project_name
+  environment             = var.environment
+  alb_ingress_cidr_blocks = var.alb_ingress_cidr_blocks
 
   # Standard Tagging Parameters
   application         = var.application

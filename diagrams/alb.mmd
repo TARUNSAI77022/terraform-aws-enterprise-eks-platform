@@ -1,0 +1,21 @@
+graph TB
+    classDef public fill:#E6F6F7,stroke:#00A4A6,stroke-width:2px,color:#007D7E;
+    classDef alb fill:#8b5cf6,stroke:#5b21b6,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef sg fill:#FFF5E6,stroke:#FF9900,stroke-width:1px,stroke-dasharray: 2 2,color:#CC7A00;
+    classDef tg fill:#28A745,stroke:#1E7E34,stroke-width:2px,color:#FFF,rx:5,ry:5;
+
+    Client((👤 Client))
+    
+    ALB_SG["🛡️ ALB Security Group<br>(Allow Inbound Port 80)"]:::sg
+
+    subgraph Public_Subnets ["Public Subnets (AZ1 & AZ2)"]
+        ALB["⚖️ Application Load Balancer<br>(Listener: Port 80)"]:::alb
+    end
+
+    TG["🎯 Target Group<br>(Port 80)"]:::tg
+
+    Client == "HTTP:80" ==> ALB_SG
+    ALB_SG -.-> ALB
+    ALB == "Forward Traffic" ==> TG
+    
+    class Public_Subnets public;

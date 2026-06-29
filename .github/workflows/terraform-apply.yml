@@ -1,0 +1,88 @@
+name: 'Terraform Apply'
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - stage
+          - prod
+      run_id:
+        description: 'Run ID of the Plan workflow that generated the tfplan artifact'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  apply:
+    name: 'Terraform Apply'
+    runs-on: ubuntu-latest
+    # Binds to the GitHub Environment to enforce approvals and retrieve secrets
+    environment: ${{ inputs.environment }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: 'ap-south-1'
+        audience: sts.amazonaws.com
+
+    - name: Configure Terraform Plugin Cache
+      run: |
+        mkdir -p ~/.terraform.d/plugin-cache
+        echo 'plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"' > ~/.terraform.rc
+
+    - name: Cache Terraform Providers
+      uses: actions/cache@v4
+      with:
+        path: ~/.terraform.d/plugin-cache
+        key: terraform-providers-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+        restore-keys: |
+          terraform-providers-${{ runner.os }}-
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+
+    - name: Download tfplan Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: tfplan-${{ inputs.environment }}
+        run-id: ${{ inputs.run_id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path: env/${{ inputs.environment }}
+
+    - name: Terraform Init
+      working-directory: ./env/${{ inputs.environment }}
+      run: terraform init -input=false -reconfigure
+
+    - name: Terraform Apply
+      working-directory: ./env/${{ inputs.environment }}
+      run: terraform apply -input=false tfplan
+
+    - name: Generate Job Summary
+      run: |
+        echo "### 🚀 Terraform Apply Complete - ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Terraform Version**: 1.5.0" >> $GITHUB_STEP_SUMMARY
+        echo "- **Applied Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Source Plan Run ID**: ${{ inputs.run_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: Applied successfully without modifications to plan." >> $GITHUB_STEP_SUMMARY
+      continue-on-error: true

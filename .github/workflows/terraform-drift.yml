@@ -1,0 +1,117 @@
+name: 'Terraform Drift Detection'
+
+on:
+  schedule:
+    - cron: '0 8 * * 1' # Runs weekly on Mondays at 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  drift:
+    name: 'Drift Detection'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, stage, prod]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: 'ap-south-1'
+        audience: sts.amazonaws.com
+
+    - name: Configure Terraform Plugin Cache
+      run: |
+        mkdir -p ~/.terraform.d/plugin-cache
+        echo 'plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"' > ~/.terraform.rc
+
+    - name: Cache Terraform Providers
+      uses: actions/cache@v4
+      with:
+        path: ~/.terraform.d/plugin-cache
+        key: terraform-providers-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+        restore-keys: |
+          terraform-providers-${{ runner.os }}-
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+
+    - name: Terraform Init
+      working-directory: ./env/${{ matrix.environment }}
+      run: terraform init -input=false -reconfigure
+
+    # Runs plan with detailed exitcode:
+    # 0 = No changes, 1 = Error, 2 = Drift detected (changes exist)
+    - name: Terraform Drift Check
+      id: check
+      working-directory: ./env/${{ matrix.environment }}
+      run: |
+        set +e
+        terraform plan -detailed-exitcode -no-color -out=tfplan-drift -input=false > drift-report.txt
+        EXIT_CODE=$?
+        set -e
+        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        if [ $EXIT_CODE -eq 2 ]; then
+          echo "DRIFT_DETECTED=true" >> $GITHUB_ENV
+          echo "Drift detected!"
+        elif [ $EXIT_CODE -eq 0 ]; then
+          echo "No drift detected."
+        else
+          echo "Terraform error occurred."
+          exit $EXIT_CODE
+        fi
+      continue-on-error: true
+
+    - name: Generate Job Summary
+      run: |
+        echo "### 🔍 Drift Scan Report - ${{ matrix.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Scan Timestamp**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Terraform Version**: 1.5.0" >> $GITHUB_STEP_SUMMARY
+        
+        EXIT_CODE=${{ steps.check.outputs.exit_code }}
+        if [ "$EXIT_CODE" -eq 2 ]; then
+          echo "- **Status**: ⚠️ **DRIFT DETECTED**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Drift Details" >> $GITHUB_STEP_SUMMARY
+          echo "```text" >> $GITHUB_STEP_SUMMARY
+          cat env/${{ matrix.environment }}/drift-report.txt | tail -n 50 >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+        elif [ "$EXIT_CODE" -eq 0 ]; then
+          echo "- **Status**: ✅ **No Drift Detected**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Message**: AWS resources match the current committed Terraform state file perfectly." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Status**: ❌ **Execution Error**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Message**: Plan execution failed. Check logs." >> $GITHUB_STEP_SUMMARY
+        fi
+      continue-on-error: true
+
+    - name: Upload Drift Plan Artifact
+      if: steps.check.outputs.exit_code == 2
+      uses: actions/upload-artifact@v4
+      with:
+        name: drift-report-${{ matrix.environment }}
+        path: |
+          env/${{ matrix.environment }}/tfplan-drift
+          env/${{ matrix.environment }}/drift-report.txt
+        retention-days: 7
+
+    - name: Fail Job if Drift Exists
+      if: steps.check.outputs.exit_code == 2
+      run: |
+        echo "Drift detected in matrix.environment: ${{ matrix.environment }}. Failing pipeline to trigger alerting systems."
+        exit 2

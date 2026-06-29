@@ -1,0 +1,90 @@
+name: 'Terraform Validate'
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  validate:
+    name: 'Validate Infrastructure'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, stage, prod]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: 'ap-south-1'
+        audience: sts.amazonaws.com
+
+    - name: Configure Terraform Plugin Cache
+      run: |
+        mkdir -p ~/.terraform.d/plugin-cache
+        echo 'plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"' > ~/.terraform.rc
+
+    - name: Cache Terraform Providers
+      uses: actions/cache@v4
+      with:
+        path: ~/.terraform.d/plugin-cache
+        key: terraform-providers-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+        restore-keys: |
+          terraform-providers-${{ runner.os }}-
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+
+    # Initialize backend and download provider plugins using committed lock file
+    - name: Terraform Init
+      working-directory: ./env/${{ matrix.environment }}
+      run: terraform init -input=false -reconfigure
+
+    - name: Terraform Format Check
+      working-directory: ./env/${{ matrix.environment }}
+      run: terraform fmt -check -recursive ../../
+
+    - name: Terraform Validate
+      working-directory: ./env/${{ matrix.environment }}
+      run: terraform validate
+
+    - name: Setup TFLint
+      uses: terraform-linters/setup-tflint@v4
+      with:
+        tflint_version: v0.51.0
+
+    - name: Init TFLint
+      run: tflint --init
+
+    - name: Run TFLint
+      run: tflint --recursive --format=compact
+
+    - name: Run tfsec
+      uses: aquasecurity/tfsec-action@v1.0.0
+      with:
+        working_directory: ./env/${{ matrix.environment }}
+
+    - name: Run Checkov
+      uses: bridgecrewio/checkov-action@master
+      with:
+        framework: terraform
+        working_directory: ./env/${{ matrix.environment }}
+        soft_fail: false

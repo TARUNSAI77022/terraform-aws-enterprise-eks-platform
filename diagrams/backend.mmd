@@ -1,0 +1,38 @@
+graph TB
+    classDef action fill:#2088FF,stroke:#0366D6,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef s3 fill:#E7157B,stroke:#C2185B,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef dynamo fill:#4053D6,stroke:#283593,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef tf fill:#5C4EE5,stroke:#4A3DBA,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef aws fill:#FF9900,stroke:#CC7A00,stroke-width:2px,color:#FFF,rx:5,ry:5;
+
+    Developer((💻 Developer))
+    
+    subgraph GitHub ["🐙 GitHub Infrastructure"]
+        GH_Push["git push origin main"]
+        Actions["⚙️ GitHub Actions<br/>(Terraform CI/CD)"]:::action
+    end
+
+    subgraph TF_Process ["Terraform Execution"]
+        TF_Plan["terraform plan"]:::tf
+        TF_Apply["terraform apply"]:::tf
+    end
+
+    subgraph AWS_Backend ["☁️ AWS Remote State Backend"]
+        direction LR
+        S3["🪣 Amazon S3<br/>(terraform-aws-enterprise-state)<br/>Stores terraform.tfstate"]:::s3
+        Dynamo["⚡ DynamoDB<br/>(terraform-state-lock)<br/>State Locking (LockID)"]:::dynamo
+    end
+
+    subgraph AWS_Cloud ["☁️ AWS Cloud Infrastructure"]
+        VPC["VPC, ALB, ECS, etc."]:::aws
+    end
+
+    Developer -- "1. Commits Code" --> GH_Push
+    GH_Push -- "2. Triggers Pipeline" --> Actions
+    Actions -- "3. Runs Workflow" --> TF_Plan
+    TF_Plan -- "4. Reads State" --> S3
+    TF_Plan -- "5. Acquires Lock" --> Dynamo
+    
+    TF_Apply -- "6. Updates State" --> S3
+    TF_Apply -- "7. Releases Lock" --> Dynamo
+    TF_Apply -- "8. Provisions Missing Resources" --> VPC

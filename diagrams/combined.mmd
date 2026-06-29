@@ -1,0 +1,72 @@
+graph TB
+    %% Styling Definitions
+    classDef vpc fill:#FAFAFA,stroke:#232F3E,stroke-width:2px,stroke-dasharray: 5 5,color:#232F3E;
+    classDef az fill:#F4F4F4,stroke:#D5DBDB,stroke-width:2px,stroke-dasharray: 3 3,color:#232F3E;
+    classDef public fill:#E6F6F7,stroke:#00A4A6,stroke-width:2px,color:#007D7E;
+    classDef private fill:#E8F4FD,stroke:#125FB3,stroke-width:2px,color:#0E4A8C;
+    classDef igw fill:#8C4FFF,stroke:#5A30B5,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef nat fill:#FF9900,stroke:#CC7A00,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef alb fill:#8b5cf6,stroke:#5b21b6,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef sg fill:#FFF5E6,stroke:#FF9900,stroke-width:1px,stroke-dasharray: 2 2,color:#CC7A00;
+    classDef tg fill:#28A745,stroke:#1E7E34,stroke-width:2px,color:#FFF,rx:5,ry:5;
+    classDef external fill:#FFFFFF,stroke:#333,stroke-width:2px,color:#333;
+
+    Internet((🌐 Internet)):::external
+    
+    subgraph VPC ["☁️ VPC: 10.0.0.0/16 (cloud-foundation-vpc)"]
+        direction TB
+        
+        IGW["🚪 Internet Gateway"]:::igw
+
+        subgraph SGs ["Security"]
+            ALB_SG["🛡️ ALB Security Group<br>(Allow Inbound Port 80)"]:::sg
+        end
+
+        subgraph AZ1 ["📍 Availability Zone 1"]
+            direction TB
+            subgraph Pub1 ["🌐 Public Subnet 1"]
+                ALB1["⚖️ ALB Node"]:::alb
+                NAT1["🔄 NAT Gateway"]:::nat
+            end
+            
+            subgraph Priv1 ["🔒 Private Subnet 1"]
+                Target1["ECS Tasks / EC2<br>(Future)"]
+            end
+        end
+        
+        subgraph AZ2 ["📍 Availability Zone 2"]
+            direction TB
+            subgraph Pub2 ["🌐 Public Subnet 2"]
+                ALB2["⚖️ ALB Node"]:::alb
+            end
+            
+            subgraph Priv2 ["🔒 Private Subnet 2"]
+                Target2["ECS Tasks / EC2<br>(Future)"]
+            end
+        end
+
+        TG["🎯 Target Group<br>(Port 80)"]:::tg
+    end
+
+    %% Inbound Request Flow
+    Internet == "1. HTTP Request" ==> IGW
+    IGW ==> ALB1 & ALB2
+    
+    %% ALB routing to targets
+    ALB1 & ALB2 == "2. Forward Traffic" ==> TG
+    TG -. "3. Route to Instances" .-> Target1 & Target2
+
+    %% Outbound Internet Flow for Private Subnets
+    Target1 -. "Outbound Traffic" .-> NAT1
+    Target2 -. "Outbound Traffic" .-> NAT1
+    NAT1 -. "Route to IGW" .-> IGW
+
+    %% Security Group Associations
+    ALB_SG -.- ALB1
+    ALB_SG -.- ALB2
+
+    %% Assign Classes
+    class VPC vpc;
+    class AZ1,AZ2 az;
+    class Pub1,Pub2 public;
+    class Priv1,Priv2 private;

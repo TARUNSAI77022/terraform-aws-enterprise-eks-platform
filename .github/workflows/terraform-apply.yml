@@ -68,7 +68,16 @@ jobs:
         name: tfplan-${{ inputs.environment }}
         run-id: ${{ inputs.run_id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path: env/${{ inputs.environment }}
+        path: .
+
+    - name: Debug Artifact Recovery
+      run: |
+        echo "=== Current working directory ==="
+        pwd
+        echo "=== Listing files recursively ==="
+        find . -maxdepth 4 -not -path '*/.*'
+        echo "=== Search for tfplan ==="
+        find . -name tfplan
 
     - name: Terraform Init
       working-directory: ./env/${{ inputs.environment }}

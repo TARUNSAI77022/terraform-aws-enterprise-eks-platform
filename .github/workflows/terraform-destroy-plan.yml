@@ -27,7 +27,7 @@ env:
   TF_IN_AUTOMATION: "true"
 
 concurrency:
-  group: terraform-destroy-${{ github.event.inputs.environment }}
+  group: terraform-pipeline-${{ inputs.environment || github.event.inputs.environment }}
   cancel-in-progress: false
 
 jobs:
@@ -101,7 +101,7 @@ jobs:
 
     - name: Generate Plaintext Destroy Plan
       working-directory: ./env/${{ github.event.inputs.environment }}
-      run: terraform plan -destroy -no-color -input=false > plan-destroy.txt
+      run: terraform show -no-color tfplan-destroy > plan-destroy.txt
       continue-on-error: true
 
     - name: Set Artifact Retention

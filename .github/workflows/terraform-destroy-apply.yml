@@ -27,7 +27,7 @@ env:
   TF_IN_AUTOMATION: "true"
 
 concurrency:
-  group: terraform-destroy-${{ github.event.inputs.environment }}
+  group: terraform-pipeline-${{ inputs.environment || github.event.inputs.environment }}
   cancel-in-progress: false
 
 jobs:
@@ -35,8 +35,8 @@ jobs:
     name: 'Execute Teardown'
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    # Bind to GitHub Environment to enforce approvals and fetch credentials
-    environment: ${{ github.event.inputs.environment }}
+    # Bind to GitHub Environment to enforce approvals and retrieve credentials
+    environment: ${{ inputs.environment || github.event.inputs.environment }}
 
     steps:
     - name: Checkout repository
@@ -77,11 +77,40 @@ jobs:
         name: tfplan-destroy-${{ github.event.inputs.environment }}
         run-id: ${{ github.event.inputs.run_id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path: env/${{ github.event.inputs.environment }}
+        path: .
 
     - name: Terraform Init
       working-directory: ./env/${{ github.event.inputs.environment }}
       run: terraform init -input=false -reconfigure
+
+    - name: Terraform Pre-flight Validation
+      working-directory: ./env/${{ github.event.inputs.environment }}
+      run: |
+        echo "=== Pinned CLI Versions ==="
+        terraform version
+        echo "=== Current Terraform Workspace ==="
+        terraform workspace show
+        echo "=== Backend Configuration ==="
+        cat backend.tf
+        echo "=== Provider Configurations ==="
+        terraform providers
+
+    - name: Validate Plan Freshness
+      working-directory: ./env/${{ github.event.inputs.environment }}
+      run: |
+        echo "=== Checking tfplan-destroy binary file ==="
+        if [ ! -f tfplan-destroy ]; then
+          echo "ERROR: tfplan-destroy file was not successfully downloaded or does not exist!"
+          exit 1
+        fi
+        echo "=== Validating plan compatibility with remote state ==="
+        if ! terraform show -json tfplan-destroy >/dev/null; then
+          echo "ERROR: The downloaded plan file is stale or invalid compared to the current remote state."
+          echo "This means the state was modified in the backend after this plan was generated."
+          echo "Please trigger a fresh Terraform Destroy Plan workflow run and execute using the new run ID."
+          exit 1
+        fi
+        echo "Plan validation successful!"
 
     - name: Terraform Apply Destroy
       working-directory: ./env/${{ github.event.inputs.environment }}

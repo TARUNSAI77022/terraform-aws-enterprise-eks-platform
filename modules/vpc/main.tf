@@ -35,10 +35,6 @@ resource "aws_vpc" "main" {
       Name = "${var.project_name}-${var.environment}-vpc"
     }
   )
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # ------------------------------------------------------------------------------
@@ -61,10 +57,6 @@ resource "aws_internet_gateway" "igw" {
       Name = "${var.project_name}-${var.environment}-igw"
     }
   )
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # ------------------------------------------------------------------------------
@@ -136,10 +128,6 @@ resource "aws_db_subnet_group" "database" {
       Name = "${var.project_name}-${var.environment}-db-subnet-group"
     }
   )
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # ------------------------------------------------------------------------------
@@ -193,10 +181,6 @@ resource "aws_route_table" "public" {
       Name = "${var.project_name}-${var.environment}-rt-public"
     }
   )
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # Private Route Table(s)
@@ -215,10 +199,6 @@ resource "aws_route_table" "private" {
       Name = "${var.project_name}-${var.environment}-rt-private-${var.single_nat_gateway ? "shared" : data.aws_availability_zones.available.names[count.index]}"
     }
   )
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # Database Route Table (strictly isolated)
@@ -231,10 +211,6 @@ resource "aws_route_table" "database" {
       Name = "${var.project_name}-${var.environment}-rt-database"
     }
   )
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # ------------------------------------------------------------------------------

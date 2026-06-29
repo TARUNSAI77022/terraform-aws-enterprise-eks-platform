@@ -23,6 +23,8 @@ data "aws_vpc" "selected" {
 # 1. Application Load Balancer (ALB) Security Group
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "alb_sg" {
+  #checkov:skip=CKV_AWS_260:ALB is public-facing and port 80 is required to receive public HTTP traffic for redirection.
+  #checkov:skip=CKV2_AWS_5:Security groups are designed to be attached to compute/database resources during subsequent deployment phases.
   name        = "${var.project_name}-${var.environment}-alb-sg"
   description = "Security group for public Application Load Balancer"
   vpc_id      = var.vpc_id
@@ -65,6 +67,7 @@ resource "aws_security_group" "alb_sg" {
 # 2. Unified Application Node Security Group (ECS, EKS, EC2 Compute)
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "app_node_sg" {
+  #checkov:skip=CKV2_AWS_5:Security groups are designed to be attached to compute/database resources during subsequent deployment phases.
   name        = "${var.project_name}-${var.environment}-app-node-sg"
   description = "Security group for compute nodes (ECS tasks, EKS workers, EC2)"
   vpc_id      = var.vpc_id
@@ -126,6 +129,7 @@ resource "aws_security_group" "app_node_sg" {
 # 3. Systems Manager (SSM) Bastion Host Security Group
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "ssm_bastion_sg" {
+  #checkov:skip=CKV2_AWS_5:Security groups are designed to be attached to compute/database resources during subsequent deployment phases.
   name        = "${var.project_name}-${var.environment}-ssm-bastion-sg"
   description = "Security group for Bastion Host using SSM Session Manager"
   vpc_id      = var.vpc_id
@@ -170,6 +174,7 @@ resource "aws_security_group" "ssm_bastion_sg" {
 # 4. PostgreSQL RDS Database Security Group
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "db_sg" {
+  #checkov:skip=CKV2_AWS_5:Security groups are designed to be attached to compute/database resources during subsequent deployment phases.
   name        = "${var.project_name}-${var.environment}-db-sg"
   description = "Security group for private PostgreSQL database"
   vpc_id      = var.vpc_id
@@ -202,6 +207,7 @@ resource "aws_security_group" "db_sg" {
 # 5. EKS Control Plane Security Group
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "eks_cluster_sg" {
+  #checkov:skip=CKV2_AWS_5:Security groups are designed to be attached to compute/database resources during subsequent deployment phases.
   name        = "${var.project_name}-${var.environment}-eks-cluster-sg"
   description = "Security group for future Amazon EKS Control Plane"
   vpc_id      = var.vpc_id

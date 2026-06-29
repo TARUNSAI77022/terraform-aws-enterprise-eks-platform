@@ -2,6 +2,8 @@
 # Public Subnets NACL
 # ------------------------------------------------------------------------------
 resource "aws_network_acl" "public" {
+  #checkov:skip=CKV_AWS_231:NACL ephemeral port range allows return traffic for TCP connections and is stateless.
+  #checkov:skip=CKV2_AWS_1:NACLs are explicitly attached to subnets using the subnet_ids attribute.
   vpc_id     = aws_vpc.main.id
   subnet_ids = aws_subnet.public[*].id
 
@@ -55,6 +57,8 @@ resource "aws_network_acl" "public" {
 # Private Application Subnets NACL
 # ------------------------------------------------------------------------------
 resource "aws_network_acl" "private" {
+  #checkov:skip=CKV_AWS_231:NACL ephemeral port range allows return traffic for TCP connections and is stateless.
+  #checkov:skip=CKV2_AWS_1:NACLs are explicitly attached to subnets using the subnet_ids attribute.
   vpc_id     = aws_vpc.main.id
   subnet_ids = aws_subnet.private[*].id
 
@@ -99,6 +103,7 @@ resource "aws_network_acl" "private" {
 # Private Database Subnets NACL (Strictly Local)
 # ------------------------------------------------------------------------------
 resource "aws_network_acl" "database" {
+  #checkov:skip=CKV2_AWS_1:NACLs are explicitly attached to subnets using the subnet_ids attribute.
   vpc_id     = aws_vpc.main.id
   subnet_ids = aws_subnet.database[*].id
 

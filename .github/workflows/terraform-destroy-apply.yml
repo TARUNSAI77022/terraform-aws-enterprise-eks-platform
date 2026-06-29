@@ -79,6 +79,15 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path: .
 
+    - name: Debug Artifact Directory Layout
+      run: |
+        echo "=== Current working directory ==="
+        pwd
+        echo "=== Listing files recursively ==="
+        find . -maxdepth 4 -not -path '*/.*'
+        echo "=== Search for tfplan-destroy ==="
+        find . -name tfplan-destroy
+
     - name: Terraform Init
       working-directory: ./env/${{ github.event.inputs.environment }}
       run: terraform init -input=false -reconfigure

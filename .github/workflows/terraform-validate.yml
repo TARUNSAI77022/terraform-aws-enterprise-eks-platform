@@ -87,6 +87,7 @@ jobs:
       uses: bridgecrewio/checkov-action@master
       with:
         framework: terraform
-        working_directory: ./env/${{ matrix.environment }}
+        directory: ./env/${{ matrix.environment }}
+        output_format: sarif
         soft_fail: false
         skip_path: ../../modules/alb,../../modules/ecr,../../modules/ecs,../../modules/codedeploy,../../modules/autoscaling,../../modules/cloudwatch,../../modules/ecs-cluster,../../modules/ecs-service,../../modules/iam,../../modules/monitoring

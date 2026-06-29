@@ -66,11 +66,6 @@ variable "private_subnet_cidrs" {
     condition     = alltrue([for cidr in var.private_subnet_cidrs : can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", cidr))])
     error_message = "Each entry in private_subnet_cidrs must be a valid IPv4 CIDR block."
   }
-
-  validation {
-    condition     = length(var.private_subnet_cidrs) == length(var.public_subnet_cidrs)
-    error_message = "The number of private application subnets must match the number of public subnets."
-  }
 }
 
 variable "database_subnet_cidrs" {
@@ -90,11 +85,6 @@ variable "database_subnet_cidrs" {
   validation {
     condition     = alltrue([for cidr in var.database_subnet_cidrs : can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", cidr))])
     error_message = "Each entry in database_subnet_cidrs must be a valid IPv4 CIDR block."
-  }
-
-  validation {
-    condition     = length(var.database_subnet_cidrs) == length(var.public_subnet_cidrs)
-    error_message = "The number of private database subnets must match the number of public subnets."
   }
 }
 

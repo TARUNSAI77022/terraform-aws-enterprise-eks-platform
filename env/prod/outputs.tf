@@ -100,49 +100,49 @@ output "s3_endpoint_id" {
 }
 
 # ==============================================================================
-# Inactive Future Modules Outputs (Disabled for Phase 1)
+# Phased Module Outputs (Safe-Mapped via Local Feature Flags)
 # ==============================================================================
-# output "alb_security_group_id" {
-#   description = "The ID of the ALB Security Group"
-#   value       = module.alb.alb_security_group_id
-# }
-# 
-# output "alb_dns_name" {
-#   description = "The DNS name of the Application Load Balancer"
-#   value       = module.alb.alb_dns_name
-# }
-# 
-# output "alb_target_group_blue_arn" {
-#   description = "The ARN of the Blue ALB Target Group"
-#   value       = module.alb.alb_target_group_blue_arn
-# }
-# 
-# output "alb_target_group_green_arn" {
-#   description = "The ARN of the Green ALB Target Group"
-#   value       = module.alb.alb_target_group_green_arn
-# }
-# 
-# output "ecr_repository_url" {
-#   description = "The URL of the ECR repository"
-#   value       = module.ecr.repository_url
-# }
-# 
-# output "ecs_cluster_name" {
-#   description = "The name of the ECS cluster"
-#   value       = module.ecs.ecs_cluster_name
-# }
-# 
-# output "ecs_service_name" {
-#   description = "The name of the ECS service"
-#   value       = module.ecs.ecs_service_name
-# }
-# 
-# output "codedeploy_app_name" {
-#   description = "The name of the CodeDeploy Application"
-#   value       = module.codedeploy.application_name
-# }
-# 
-# output "codedeploy_deployment_group" {
-#   description = "The name of the CodeDeploy Deployment Group"
-#   value       = module.codedeploy.deployment_group_name
-# }
+output "alb_security_group_id" {
+  description = "The ID of the ALB Security Group"
+  value       = local.enable_alb ? module.alb[0].alb_security_group_id : null
+}
+
+output "alb_dns_name" {
+  description = "The DNS name of the Application Load Balancer"
+  value       = local.enable_alb ? module.alb[0].alb_dns_name : null
+}
+
+output "alb_target_group_blue_arn" {
+  description = "The ARN of the Blue ALB Target Group"
+  value       = local.enable_alb ? module.alb[0].alb_target_group_blue_arn : null
+}
+
+output "alb_target_group_green_arn" {
+  description = "The ARN of the Green ALB Target Group"
+  value       = local.enable_alb ? module.alb[0].alb_target_group_green_arn : null
+}
+
+output "ecr_repository_url" {
+  description = "The URL of the ECR repository"
+  value       = local.enable_ecr ? module.ecr[0].repository_url : null
+}
+
+output "ecs_cluster_name" {
+  description = "The name of the ECS cluster"
+  value       = local.enable_ecs ? module.ecs[0].ecs_cluster_name : null
+}
+
+output "ecs_service_name" {
+  description = "The name of the ECS service"
+  value       = local.enable_ecs ? module.ecs[0].ecs_service_name : null
+}
+
+output "codedeploy_app_name" {
+  description = "The name of the CodeDeploy Application"
+  value       = local.enable_codedeploy ? module.codedeploy[0].application_name : null
+}
+
+output "codedeploy_deployment_group" {
+  description = "The name of the CodeDeploy Deployment Group"
+  value       = local.enable_codedeploy ? module.codedeploy[0].deployment_group_name : null
+}

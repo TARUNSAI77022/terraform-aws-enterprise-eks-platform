@@ -77,7 +77,7 @@ jobs:
         name: tfplan-destroy-${{ inputs.environment }}
         run-id: ${{ inputs.run_id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path: .
+        path: env/${{ inputs.environment }}
 
     - name: Debug Artifact Directory Layout
       run: |

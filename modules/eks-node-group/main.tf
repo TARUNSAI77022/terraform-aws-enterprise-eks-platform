@@ -1,4 +1,5 @@
 resource "aws_launch_template" "this" {
+  # checkov:skip=CKV_AWS_341:EKS nodes require response hop limit of 2 for pods to access IMDSv2 / IAM Roles for Service Accounts (IRSA)
   for_each = var.node_groups
 
   name_prefix   = "${var.project_name}-${var.environment}-node-${each.key}-"

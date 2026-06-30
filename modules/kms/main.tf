@@ -65,6 +65,9 @@ resource "aws_kms_alias" "ecr" {
 # IAM Policy Documents for KMS Keys
 # ------------------------------------------------------------------------------
 data "aws_iam_policy_document" "default" {
+  # checkov:skip=CKV_AWS_109:KMS key policies require wildcard resource (*) and root account full management access per AWS best practice
+  # checkov:skip=CKV_AWS_111:KMS key policies require wildcard resource (*) and root account full management access per AWS best practice
+  # checkov:skip=CKV_AWS_356:KMS key policies require wildcard resource (*) and root account full management access per AWS best practice
   statement {
     sid       = "EnableIAMUserPermissions"
     effect    = "Allow"
@@ -78,6 +81,9 @@ data "aws_iam_policy_document" "default" {
 }
 
 data "aws_iam_policy_document" "cloudwatch" {
+  # checkov:skip=CKV_AWS_109:KMS key policies require wildcard resource (*) and root account full management access per AWS best practice
+  # checkov:skip=CKV_AWS_111:KMS key policies require wildcard resource (*) and root account full management access per AWS best practice
+  # checkov:skip=CKV_AWS_356:KMS key policies require wildcard resource (*) and root account full management access per AWS best practice
   statement {
     sid       = "EnableIAMUserPermissions"
     effect    = "Allow"

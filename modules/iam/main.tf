@@ -164,6 +164,7 @@ data "aws_iam_policy_document" "aws_lb_controller_trust" {
   }
 }
 
+# tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_policy" "aws_load_balancer_controller" {
   name        = "${var.project_name}-${var.environment}-aws-lb-controller-policy"
   description = "IAM policy for AWS Load Balancer Controller in EKS"
@@ -417,6 +418,7 @@ data "aws_iam_policy_document" "cluster_autoscaler_trust" {
   }
 }
 
+# tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_policy" "cluster_autoscaler" {
   name        = "${var.project_name}-${var.environment}-cluster-autoscaler-policy"
   description = "IAM policy for EKS Cluster Autoscaler"

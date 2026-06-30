@@ -79,31 +79,6 @@ resource "aws_iam_role_policy_attachment" "node_ssm_policy" {
 # ------------------------------------------------------------------------------
 # Trust Policies for IRSA
 # ------------------------------------------------------------------------------
-
-# General trust policy helper template for IRSA service accounts
-# Pod Identity Prep: To upgrade to EKS Pod Identity in future, replace web identity principal
-# with "pods.eks.amazonaws.com" and action ["sts:AssumeRole", "sts:TagSession"]
-data "aws_iam_policy_document" "irsa_trust" {
-  count = var.oidc_provider_arn != "" ? 1 : 0
-
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    effect  = "Allow"
-
-    principals {
-      type        = "Federated"
-      identifiers = [var.oidc_provider_arn]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(var.oidc_provider_url, "https://", "")}:aud"
-      values   = ["sts.amazonaws.com"]
-    }
-  }
-}
-
-# ------------------------------------------------------------------------------
 # 3. Amazon EBS CSI Driver IAM Role (IRSA)
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "ebs_csi" {

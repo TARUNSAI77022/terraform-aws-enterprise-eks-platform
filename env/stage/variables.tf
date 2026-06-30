@@ -147,3 +147,142 @@ variable "alb_ingress_cidr_blocks" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+# ------------------------------------------------------------------------------
+# Phase 2: EKS Platform Configuration Variables
+# ------------------------------------------------------------------------------
+variable "kubernetes_version" {
+  description = "The target Kubernetes version"
+  type        = string
+  default     = "1.30"
+}
+
+variable "coredns_version" {
+  description = "CoreDNS addon version"
+  type        = string
+  default     = "v1.11.1-eksbuild.9"
+}
+
+variable "kube_proxy_version" {
+  description = "kube-proxy addon version"
+  type        = string
+  default     = "v1.30.0-eksbuild.3"
+}
+
+variable "vpc_cni_version" {
+  description = "VPC CNI addon version"
+  type        = string
+  default     = "v1.18.1-eksbuild.3"
+}
+
+variable "ebs_csi_version" {
+  description = "EBS CSI Driver addon version"
+  type        = string
+  default     = "v1.30.0-eksbuild.1"
+}
+
+variable "aws_load_balancer_controller_version" {
+  description = "AWS Load Balancer Controller Helm chart version"
+  type        = string
+  default     = "1.8.1"
+}
+
+variable "cluster_autoscaler_version" {
+  description = "Cluster Autoscaler Helm chart version"
+  type        = string
+  default     = "9.37.0"
+}
+
+variable "metrics_server_version" {
+  description = "Metrics Server Helm chart version"
+  type        = string
+  default     = "3.12.1"
+}
+
+variable "create_oidc_provider" {
+  description = "Whether to create the OIDC provider for IRSA"
+  type        = bool
+  default     = true
+}
+
+variable "oidc_provider_arn" {
+  description = "The ARN of the existing EKS OIDC Provider if create_oidc_provider is false"
+  type        = string
+  default     = ""
+}
+
+variable "oidc_provider_url" {
+  description = "The URL of the existing EKS OIDC Provider if create_oidc_provider is false"
+  type        = string
+  default     = ""
+}
+
+variable "endpoint_private_access" {
+  description = "Enable EKS private API server endpoint access"
+  type        = bool
+  default     = true
+}
+
+variable "endpoint_public_access" {
+  description = "Enable EKS public API server endpoint access"
+  type        = bool
+  default     = false
+}
+
+variable "public_access_cidrs" {
+  description = "Allowed CIDR blocks for EKS public endpoint access"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "authentication_mode" {
+  description = "EKS authentication mode"
+  type        = string
+  default     = "API_AND_CONFIG_MAP"
+}
+
+variable "access_entries" {
+  description = "Map of access entries and role associations to configure on EKS"
+  type = map(object({
+    principal_arn = string
+    type          = optional(string, "STANDARD")
+    user_name     = optional(string)
+    policy_arn    = optional(string)
+    access_scope = optional(object({
+      type       = string
+      namespaces = optional(list(string))
+    }), { type = "cluster" })
+  }))
+  default = {}
+}
+
+variable "node_groups" {
+  description = "A map of node groups to provision"
+  type = map(object({
+    instance_types = list(string)
+    capacity_type  = string
+    min_size       = number
+    max_size       = number
+    desired_size   = number
+    disk_size      = optional(number, 50)
+    ami_type       = optional(string, "AL2023_x86_64_STANDARD")
+  }))
+  default = {
+    system = {
+      instance_types = ["t3.large"]
+      capacity_type  = "ON_DEMAND"
+      min_size       = 2
+      max_size       = 4
+      desired_size   = 2
+      disk_size      = 50
+    }
+    applications = {
+      instance_types = ["t3.large"]
+      capacity_type  = "SPOT"
+      min_size       = 2
+      max_size       = 6
+      desired_size   = 3
+      disk_size      = 50
+    }
+  }
+}

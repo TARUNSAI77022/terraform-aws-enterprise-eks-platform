@@ -1,20 +1,57 @@
-# Purpose: This module provisions an Amazon ECR (Elastic Container Registry) repository.
-# ECR will securely store the Docker container images for our application.
-# Later, ECS (Elastic Container Service) tasks will pull these images from ECR to run the application containers.
-# During Blue/Green deployments, updated images will be pushed here, and CodeDeploy will orchestrate 
-# the shift of traffic to new ECS tasks running the latest image versions.
-
 resource "aws_ecr_repository" "this" {
-  name                 = "${var.project_name}-${var.environment}"
-  image_tag_mutability = "MUTABLE"
+  for_each             = toset(var.repository_names)
+  name                 = "${var.project_name}-${var.environment}-${each.value}"
+  image_tag_mutability = var.image_tag_mutability
 
   image_scanning_configuration {
-    scan_on_push = true
+    scan_on_push = var.image_scanning_enabled
   }
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-ecr-repository-this"
-    Project     = var.project_name
-    Environment = var.environment
-    ManagedBy   = "Terraform"
+
+  encryption_configuration {
+    encryption_type = "KMS"
+    kms_key         = var.kms_key_arn
   }
+
+  tags = merge(
+    var.tags,
+    {
+      Name        = "${var.project_name}-${var.environment}-${each.value}"
+      ManagedBy   = "Terraform"
+    }
+  )
+}
+
+resource "aws_ecr_lifecycle_policy" "this" {
+  for_each   = aws_ecr_repository.this
+  repository = each.value.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Expire untagged images older than 14 days"
+        selection = {
+          tagStatus   = "untagged"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      },
+      {
+        rulePriority = 2
+        description  = "Keep only last 30 tagged images"
+        selection = {
+          tagStatus     = "any"
+          countType     = "imageCountMoreThan"
+          countNumber   = 30
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
 }

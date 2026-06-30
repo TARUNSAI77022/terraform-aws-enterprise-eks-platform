@@ -94,6 +94,17 @@ graph TB
     class Priv1,Priv2 private;
 ```
 
+## 🏗️ Phase 2: Production-Ready Amazon EKS Platform
+
+This project extends the Phase 1 Cloud Foundation with an enterprise-grade, HIPAA-compliant Amazon EKS platform:
+- **Centralized KMS Encryption**: Dedicated Customer Managed Keys (CMKs) for Kubernetes Secrets, CloudWatch Logs, and ECR Repositories.
+- **EKS Control Plane**: Configured with private endpoint access, audit logging, and the modern EKS Access Entry authentication system.
+- **Managed Node Groups**: Configurable Spot/On-Demand pools using customized launch templates enforcing IMDSv2 and EBS volume encryption.
+- **AWS & Helm Add-ons**: Sequence-ordered installations of CoreDNS, kube-proxy, VPC CNI, AWS Load Balancer Controller, Cluster Autoscaler, and Metrics Server.
+
+For full implementation details, architectural diagrams, and design decisions, see the [walkthrough.md](file:///C:/Users/Tarun/.gemini/antigravity-ide/brain/20d9822d-d7ba-4a7d-8c75-e34dbda16037/walkthrough.md).
+For operational upgrade playbooks, see [docs/UPGRADE.md](file:///d:/terraform-hippa/docs/UPGRADE.md).
+
 ## 🚀 Getting Started Locally
 
 ### Prerequisites

@@ -12,8 +12,8 @@ on:
         type: choice
         options:
           - dev
-          # - stage
-          # - prod
+          - stage
+          - prod
 
 permissions:
   id-token: write

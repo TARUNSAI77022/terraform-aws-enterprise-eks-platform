@@ -398,7 +398,7 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
 
 resource "aws_iam_role_policy_attachment" "aws_lb_controller" {
   count      = var.oidc_provider_arn != "" ? 1 : 0
-  policy_arn = aws_iam_policy.aws_load_balancer_controller[0].arn
+  policy_arn = aws_iam_policy.aws_load_balancer_controller.arn
   role       = aws_iam_role.aws_lb_controller[0].name
 }
 

@@ -15,8 +15,8 @@ resource "aws_ecr_repository" "this" {
   tags = merge(
     var.tags,
     {
-      Name        = "${var.project_name}-${var.environment}-${each.value}"
-      ManagedBy   = "Terraform"
+      Name      = "${var.project_name}-${var.environment}-${each.value}"
+      ManagedBy = "Terraform"
     }
   )
 }
@@ -44,9 +44,9 @@ resource "aws_ecr_lifecycle_policy" "this" {
         rulePriority = 2
         description  = "Keep only last 30 tagged images"
         selection = {
-          tagStatus     = "any"
-          countType     = "imageCountMoreThan"
-          countNumber   = 30
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
+          countNumber = 30
         }
         action = {
           type = "expire"

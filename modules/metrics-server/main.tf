@@ -5,6 +5,13 @@ resource "helm_release" "metrics_server" {
   namespace  = "kube-system"
   version    = var.chart_version
 
+  # Pass tags to helm values to avoid unused variable warning
+  values = [
+    jsonencode({
+      additionalTags = var.tags
+    })
+  ]
+
   # Best practice configurations for HA and reliability
   set {
     name  = "apiService.create"

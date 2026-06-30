@@ -28,7 +28,9 @@ resource "aws_eks_cluster" "this" {
   tags = merge(
     var.tags,
     {
-      Name = var.cluster_name
+      Name        = var.cluster_name
+      Project     = var.project_name
+      Environment = var.environment
     }
   )
 }
@@ -50,7 +52,9 @@ resource "aws_iam_openid_connect_provider" "this" {
   tags = merge(
     var.tags,
     {
-      Name = "${var.cluster_name}-oidc-provider"
+      Name        = "${var.cluster_name}-oidc-provider"
+      Project     = var.project_name
+      Environment = var.environment
     }
   )
 }

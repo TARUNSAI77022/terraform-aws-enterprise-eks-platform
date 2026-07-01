@@ -25,3 +25,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "create_oidc_provider" {
+  description = "Whether to create/use the OIDC provider (controls EKS/OIDC roles creation)"
+  type        = bool
+  default     = true
+}

@@ -85,11 +85,12 @@ module "kms" {
 module "iam" {
   source = "../../modules/iam"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_provider_url = module.eks.oidc_provider_url
-  tags              = local.tags
+  project_name         = var.project_name
+  environment          = var.environment
+  create_oidc_provider = var.create_oidc_provider
+  oidc_provider_arn    = module.eks.oidc_provider_arn
+  oidc_provider_url    = module.eks.oidc_provider_url
+  tags                 = local.tags
 }
 
 # ------------------------------------------------------------------------------

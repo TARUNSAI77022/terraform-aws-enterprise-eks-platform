@@ -82,7 +82,7 @@ resource "aws_iam_role_policy_attachment" "node_ssm_policy" {
 # 3. Amazon EBS CSI Driver IAM Role (IRSA)
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "ebs_csi" {
-  count = var.oidc_provider_arn != "" ? 1 : 0
+  count = var.create_oidc_provider ? 1 : 0
   name  = "${var.project_name}-${var.environment}-ebs-csi-role"
 
   assume_role_policy = data.aws_iam_policy_document.ebs_csi_trust[0].json
@@ -93,7 +93,7 @@ resource "aws_iam_role" "ebs_csi" {
 }
 
 data "aws_iam_policy_document" "ebs_csi_trust" {
-  count = var.oidc_provider_arn != "" ? 1 : 0
+  count = var.create_oidc_provider ? 1 : 0
 
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -119,7 +119,7 @@ data "aws_iam_policy_document" "ebs_csi_trust" {
 }
 
 resource "aws_iam_role_policy_attachment" "ebs_csi" {
-  count      = var.oidc_provider_arn != "" ? 1 : 0
+  count      = var.create_oidc_provider ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
   role       = aws_iam_role.ebs_csi[0].name
 }
@@ -128,7 +128,7 @@ resource "aws_iam_role_policy_attachment" "ebs_csi" {
 # 4. AWS Load Balancer Controller IAM Role (IRSA)
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "aws_lb_controller" {
-  count = var.oidc_provider_arn != "" ? 1 : 0
+  count = var.create_oidc_provider ? 1 : 0
   name  = "${var.project_name}-${var.environment}-aws-lb-controller-role"
 
   assume_role_policy = data.aws_iam_policy_document.aws_lb_controller_trust[0].json
@@ -139,7 +139,7 @@ resource "aws_iam_role" "aws_lb_controller" {
 }
 
 data "aws_iam_policy_document" "aws_lb_controller_trust" {
-  count = var.oidc_provider_arn != "" ? 1 : 0
+  count = var.create_oidc_provider ? 1 : 0
 
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -380,7 +380,7 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
 }
 
 resource "aws_iam_role_policy_attachment" "aws_lb_controller" {
-  count      = var.oidc_provider_arn != "" ? 1 : 0
+  count      = var.create_oidc_provider ? 1 : 0
   policy_arn = aws_iam_policy.aws_load_balancer_controller.arn
   role       = aws_iam_role.aws_lb_controller[0].name
 }
@@ -389,7 +389,7 @@ resource "aws_iam_role_policy_attachment" "aws_lb_controller" {
 # 5. Cluster Autoscaler IAM Role (IRSA)
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "cluster_autoscaler" {
-  count = var.oidc_provider_arn != "" ? 1 : 0
+  count = var.create_oidc_provider ? 1 : 0
   name  = "${var.project_name}-${var.environment}-cluster-autoscaler-role"
 
   assume_role_policy = data.aws_iam_policy_document.cluster_autoscaler_trust[0].json
@@ -400,7 +400,7 @@ resource "aws_iam_role" "cluster_autoscaler" {
 }
 
 data "aws_iam_policy_document" "cluster_autoscaler_trust" {
-  count = var.oidc_provider_arn != "" ? 1 : 0
+  count = var.create_oidc_provider ? 1 : 0
 
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -462,7 +462,7 @@ resource "aws_iam_policy" "cluster_autoscaler" {
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_autoscaler" {
-  count      = var.oidc_provider_arn != "" ? 1 : 0
+  count      = var.create_oidc_provider ? 1 : 0
   policy_arn = aws_iam_policy.cluster_autoscaler.arn
   role       = aws_iam_role.cluster_autoscaler[0].name
 }

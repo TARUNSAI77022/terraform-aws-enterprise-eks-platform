@@ -30,7 +30,7 @@ jobs:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
     concurrency:
-      group: terraform-pipeline-${{ env.TARGET_ENV }}
+      group: terraform-pipeline-${{ github.event.inputs.environment || 'dev' }}
       cancel-in-progress: false
 
     steps:

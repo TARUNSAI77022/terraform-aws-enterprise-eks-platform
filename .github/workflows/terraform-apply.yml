@@ -12,15 +12,14 @@ on:
           - dev
           - stage
           - prod
-      run_id:
-        description: 'Run ID of the Plan workflow that generated the tfplan artifact'
+      commit_sha:
+        description: 'The Git Commit SHA of the plan to download and apply'
         required: true
         type: string
 
 permissions:
   id-token: write
   contents: read
-  actions: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -65,13 +64,13 @@ jobs:
       with:
         terraform_version: 1.5.0
 
-    - name: Download tfplan Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: tfplan-${{ inputs.environment }}
-        run-id: ${{ inputs.run_id }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path: .
+    - name: Download Plan Files from S3
+      run: |
+        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/tfplan env/${{ inputs.environment }}/tfplan
+        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/terraform-plan.txt env/${{ inputs.environment }}/terraform-plan.txt
+        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/terraform-plan.log env/${{ inputs.environment }}/terraform-plan.log
+        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/metadata.json env/${{ inputs.environment }}/metadata.json
+        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/.terraform.lock.hcl env/${{ inputs.environment }}/.terraform.lock.hcl.s3
 
     - name: Terraform Init
       working-directory: ./env/${{ inputs.environment }}
@@ -89,22 +88,126 @@ jobs:
         echo "=== Provider Configurations ==="
         terraform providers
 
-    - name: Validate Plan Freshness
-      working-directory: ./env/${{ inputs.environment }}
+    - name: Validate Metadata, Plan Age, and Lock File
       run: |
-        echo "=== Checking tfplan binary file ==="
-        if [ ! -f tfplan ]; then
-          echo "ERROR: tfplan file was not successfully downloaded or does not exist!"
+        METADATA_FILE="env/${{ inputs.environment }}/metadata.json"
+        
+        if [ ! -f "$METADATA_FILE" ]; then
+          echo "ERROR: metadata.json was not successfully downloaded or does not exist!"
           exit 1
         fi
-        echo "=== Validating plan compatibility with remote state ==="
-        if ! terraform show -json tfplan >/dev/null; then
-          echo "ERROR: The downloaded plan file is stale or invalid compared to the current remote state."
-          echo "This means the state was modified in the backend after this plan was generated."
-          echo "Please trigger a fresh Terraform Plan workflow run and deploy using the new run ID."
+        
+        echo "=== Reading Metadata ==="
+        cat "$METADATA_FILE"
+        echo ""
+        
+        # Read parameters from JSON
+        METADATA_ENV=$(jq -r '.Environment' "$METADATA_FILE")
+        METADATA_SHA=$(jq -r '."Git Commit SHA"' "$METADATA_FILE")
+        METADATA_REPO=$(jq -r '.Repository' "$METADATA_FILE")
+        METADATA_TF=$(jq -r '."Terraform Version"' "$METADATA_FILE")
+        METADATA_WS=$(jq -r '."Terraform Workspace"' "$METADATA_FILE")
+        METADATA_BRANCH=$(jq -r '.Branch' "$METADATA_FILE")
+        METADATA_TS=$(jq -r '."UTC Timestamp"' "$METADATA_FILE")
+        
+        METADATA_STATUS=$(jq -r '.workflow_status' "$METADATA_FILE")
+        METADATA_CONCLUSION=$(jq -r '.workflow_conclusion' "$METADATA_FILE")
+        METADATA_WORKFLOW=$(jq -r '.workflow_name' "$METADATA_FILE")
+        
+        echo "=== Validating Parameters ==="
+        echo "Expected Environment: ${{ inputs.environment }} | Found: $METADATA_ENV"
+        echo "Expected Commit SHA: ${{ inputs.commit_sha }} | Found: $METADATA_SHA"
+        echo "Expected Repository: ${{ github.repository }} | Found: $METADATA_REPO"
+        echo "Expected TF Version: 1.5.0 | Found: $METADATA_TF"
+        echo "Expected Workspace: default | Found: $METADATA_WS"
+        echo "Expected Workflow Name: Terraform Plan | Found: $METADATA_WORKFLOW"
+        echo "Expected Workflow Status: completed | Found: $METADATA_STATUS"
+        echo "Expected Workflow Conclusion: success | Found: $METADATA_CONCLUSION"
+        
+        # Validation checks
+        if [ "$METADATA_ENV" != "${{ inputs.environment }}" ]; then
+          echo "ERROR: Environment mismatch! Expected: ${{ inputs.environment }}, Found: $METADATA_ENV"
           exit 1
         fi
-        echo "Plan validation successful!"
+        
+        if [ "$METADATA_SHA" != "${{ inputs.commit_sha }}" ]; then
+          echo "ERROR: Commit SHA mismatch! Expected: ${{ inputs.commit_sha }}, Found: $METADATA_SHA"
+          exit 1
+        fi
+        
+        if [ "$METADATA_REPO" != "${{ github.repository }}" ]; then
+          echo "ERROR: Repository mismatch! Expected: ${{ github.repository }}, Found: $METADATA_REPO"
+          exit 1
+        fi
+        
+        if [ "$METADATA_TF" != "1.5.0" ]; then
+          echo "ERROR: Terraform version mismatch! Expected: 1.5.0, Found: $METADATA_TF"
+          exit 1
+        fi
+        
+        if [ "$METADATA_WS" != "default" ]; then
+          echo "ERROR: Terraform Workspace mismatch! Expected: default, Found: $METADATA_WS"
+          exit 1
+        fi
+        
+        if [ "$METADATA_WORKFLOW" != "Terraform Plan" ]; then
+          echo "ERROR: Workflow Name mismatch! Expected: Terraform Plan, Found: $METADATA_WORKFLOW"
+          exit 1
+        fi
+        
+        if [ "$METADATA_STATUS" != "completed" ]; then
+          echo "ERROR: Terraform Plan workflow was not successfully completed (Status: $METADATA_STATUS)."
+          exit 1
+        fi
+        
+        if [ "$METADATA_CONCLUSION" != "success" ]; then
+          echo "ERROR: Terraform Plan workflow conclusion was not success (Conclusion: $METADATA_CONCLUSION)."
+          exit 1
+        fi
+        
+        if [ -z "$METADATA_BRANCH" ]; then
+          echo "ERROR: Metadata Branch is empty!"
+          exit 1
+        fi
+        
+        # Validate Plan Age (Max 24 hours)
+        PLAN_EPOCH=$(date -d "$METADATA_TS" +%s 2>/dev/null || date -jf "%Y-%m-%dT%H:%M:%SZ" "$METADATA_TS" +%s)
+        NOW_EPOCH=$(date -u +%s)
+        AGE_SEC=$((NOW_EPOCH - PLAN_EPOCH))
+        MAX_AGE_SEC=$((24 * 60 * 60)) # 24 hours in seconds
+        
+        echo "=== Plan Age Verification ==="
+        echo "Plan Timestamp: $METADATA_TS (Epoch: $PLAN_EPOCH)"
+        echo "Current Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ') (Epoch: $NOW_EPOCH)"
+        echo "Plan Age: $AGE_SEC seconds"
+        
+        if [ "$AGE_SEC" -gt "$MAX_AGE_SEC" ] || [ "$AGE_SEC" -lt -300 ]; then
+          echo "ERROR: Terraform plan is older than 24 hours."
+          echo "Generate a new plan before applying."
+          exit 1
+        fi
+        
+        # Validate Terraform Lock File
+        echo "=== Comparing Provider Lock Files ==="
+        DOWNLOADED_LOCK="env/${{ inputs.environment }}/.terraform.lock.hcl.s3"
+        REPO_LOCK="env/${{ inputs.environment }}/.terraform.lock.hcl"
+        
+        if [ ! -f "$DOWNLOADED_LOCK" ]; then
+          echo "ERROR: Downloaded lock file from S3 does not exist!"
+          exit 1
+        fi
+        
+        if [ ! -f "$REPO_LOCK" ]; then
+          echo "ERROR: Repository lock file does not exist!"
+          exit 1
+        fi
+        
+        if ! diff -q "$DOWNLOADED_LOCK" "$REPO_LOCK" >/dev/null; then
+          echo "ERROR: Terraform provider versions have changed."
+          echo "Generate a new Terraform Plan before applying."
+          exit 1
+        fi
+        echo "Metadata, plan age, and lock file validations successful!"
 
     - name: Terraform Apply
       working-directory: ./env/${{ inputs.environment }}
@@ -115,6 +218,6 @@ jobs:
         echo "### 🚀 Terraform Apply Complete - ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Terraform Version**: 1.5.0" >> $GITHUB_STEP_SUMMARY
         echo "- **Applied Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Source Plan Run ID**: ${{ inputs.run_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Source Plan Commit SHA**: ${{ inputs.commit_sha }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Status**: Applied successfully without modifications to plan." >> $GITHUB_STEP_SUMMARY
       continue-on-error: true

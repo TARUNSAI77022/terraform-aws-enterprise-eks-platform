@@ -144,15 +144,59 @@ jobs:
         fi
       continue-on-error: true
 
-    - name: Upload Plan Artifacts
+    - name: Prepare Plan Artifacts for Upload
+      run: |
+        # Copy infracost report if it exists
+        if [ -f infracost-report.json ]; then
+          cp infracost-report.json env/${{ env.TARGET_ENV }}/
+        else
+          echo "{}" > env/${{ env.TARGET_ENV }}/infracost-report.json
+        fi
+        
+        # Determine Terraform Workspace
+        cd env/${{ env.TARGET_ENV }}
+        TF_WS=$(terraform workspace show)
+        cd -
+        
+        # Generate metadata.json with workflow status information
+        cat <<EOF > env/${{ env.TARGET_ENV }}/metadata.json
+        {
+          "Environment": "${{ env.TARGET_ENV }}",
+          "Git Commit SHA": "${{ github.sha }}",
+          "GitHub Run ID": "${{ github.run_id }}",
+          "Workflow Name": "${{ github.workflow }}",
+          "Repository": "${{ github.repository }}",
+          "Branch": "${{ github.ref_name }}",
+          "Actor": "${{ github.actor }}",
+          "Terraform Version": "1.5.0",
+          "UTC Timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+          "Terraform Workspace": "$TF_WS",
+          "workflow_status": "completed",
+          "workflow_conclusion": "success",
+          "workflow_name": "${{ github.workflow }}",
+          "workflow_run_id": "${{ github.run_id }}",
+          "workflow_attempt": "${{ github.run_attempt }}"
+        }
+        EOF
+
+    - name: Upload Plan to S3
+      run: |
+        # Upload files to S3 under env/commit-sha/ prefix with SSE encryption
+        aws s3 cp env/${{ env.TARGET_ENV }}/tfplan s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ env.TARGET_ENV }}/${{ github.sha }}/tfplan --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/terraform-plan.txt s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ env.TARGET_ENV }}/${{ github.sha }}/terraform-plan.txt --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/terraform-plan.log s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ env.TARGET_ENV }}/${{ github.sha }}/terraform-plan.log --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/metadata.json s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ env.TARGET_ENV }}/${{ github.sha }}/metadata.json --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/infracost-report.json s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ env.TARGET_ENV }}/${{ github.sha }}/infracost-report.json --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/.terraform.lock.hcl s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ env.TARGET_ENV }}/${{ github.sha }}/.terraform.lock.hcl --sse AES256
+
+    - name: Upload Plan Artifacts (Logs Only)
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: tfplan-${{ env.TARGET_ENV }}
+        name: tfplan-logs-${{ env.TARGET_ENV }}
         path: |
-          env/${{ env.TARGET_ENV }}/tfplan
           env/${{ env.TARGET_ENV }}/terraform-plan.log
           env/${{ env.TARGET_ENV }}/terraform-plan.txt
-          infracost-report.json
+          env/${{ env.TARGET_ENV }}/infracost-report.json
         if-no-files-found: ignore
         retention-days: 14

@@ -113,7 +113,7 @@ module "ecr" {
 
   project_name     = var.project_name
   environment      = var.environment
-  repository_names = ["authlogin", "order", "ro", "warehouse", "rma", "scheduler", "reverseproxy", "centralsignalrhub"]
+  repository_names = ["devops"]
   kms_key_arn      = module.kms.ecr_kms_key_arn
   tags             = local.tags
 }

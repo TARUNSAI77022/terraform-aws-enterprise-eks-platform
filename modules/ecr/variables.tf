@@ -11,7 +11,7 @@ variable "environment" {
 variable "repository_names" {
   description = "List of ECR repository names to create"
   type        = list(string)
-  default     = ["api", "frontend", "worker", "scheduler"]
+  default     = ["devops"]
 }
 
 variable "image_tag_mutability" {

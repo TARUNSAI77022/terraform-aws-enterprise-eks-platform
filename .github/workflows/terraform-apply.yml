@@ -24,6 +24,7 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   TF_IN_AUTOMATION: "true"
+  AWS_ARTIFACT_BUCKET_NAME: ${{ secrets.AWS_ARTIFACT_BUCKET_NAME || vars.AWS_ARTIFACT_BUCKET_NAME }}
 
 jobs:
   apply:
@@ -66,11 +67,11 @@ jobs:
 
     - name: Download Plan Files from S3
       run: |
-        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/tfplan env/${{ inputs.environment }}/tfplan
-        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/terraform-plan.txt env/${{ inputs.environment }}/terraform-plan.txt
-        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/terraform-plan.log env/${{ inputs.environment }}/terraform-plan.log
-        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/metadata.json env/${{ inputs.environment }}/metadata.json
-        aws s3 cp s3://${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}/${{ inputs.environment }}/${{ inputs.commit_sha }}/.terraform.lock.hcl env/${{ inputs.environment }}/.terraform.lock.hcl.s3
+        aws s3 cp s3://$AWS_ARTIFACT_BUCKET_NAME/${{ inputs.environment }}/${{ inputs.commit_sha }}/tfplan env/${{ inputs.environment }}/tfplan
+        aws s3 cp s3://$AWS_ARTIFACT_BUCKET_NAME/${{ inputs.environment }}/${{ inputs.commit_sha }}/terraform-plan.txt env/${{ inputs.environment }}/terraform-plan.txt
+        aws s3 cp s3://$AWS_ARTIFACT_BUCKET_NAME/${{ inputs.environment }}/${{ inputs.commit_sha }}/terraform-plan.log env/${{ inputs.environment }}/terraform-plan.log
+        aws s3 cp s3://$AWS_ARTIFACT_BUCKET_NAME/${{ inputs.environment }}/${{ inputs.commit_sha }}/metadata.json env/${{ inputs.environment }}/metadata.json
+        aws s3 cp s3://$AWS_ARTIFACT_BUCKET_NAME/${{ inputs.environment }}/${{ inputs.commit_sha }}/.terraform.lock.hcl env/${{ inputs.environment }}/.terraform.lock.hcl.s3
 
     - name: Terraform Init
       working-directory: ./env/${{ inputs.environment }}

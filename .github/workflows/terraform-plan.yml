@@ -24,7 +24,6 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   TF_IN_AUTOMATION: "true"
   TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
-  AWS_ARTIFACT_BUCKET_NAME: ${{ secrets.AWS_ARTIFACT_BUCKET_NAME || vars.AWS_ARTIFACT_BUCKET_NAME }}
 
 jobs:
   plan:
@@ -180,21 +179,15 @@ jobs:
         }
         EOF
 
-    - name: Debug S3 Bucket Variables
-      run: |
-        echo "Secret Bucket='${{ secrets.AWS_ARTIFACT_BUCKET_NAME }}'"
-        echo "Variable Bucket='${{ vars.AWS_ARTIFACT_BUCKET_NAME }}'"
-        echo "ENV Bucket='$AWS_ARTIFACT_BUCKET_NAME'"
-
     - name: Upload Plan to S3
       run: |
         # Upload files to S3 under env/commit-sha/ prefix with SSE encryption
-        aws s3 cp env/${{ env.TARGET_ENV }}/tfplan s3://$AWS_ARTIFACT_BUCKET_NAME/${{ env.TARGET_ENV }}/${{ github.sha }}/tfplan --sse AES256
-        aws s3 cp env/${{ env.TARGET_ENV }}/terraform-plan.txt s3://$AWS_ARTIFACT_BUCKET_NAME/${{ env.TARGET_ENV }}/${{ github.sha }}/terraform-plan.txt --sse AES256
-        aws s3 cp env/${{ env.TARGET_ENV }}/terraform-plan.log s3://$AWS_ARTIFACT_BUCKET_NAME/${{ env.TARGET_ENV }}/${{ github.sha }}/terraform-plan.log --sse AES256
-        aws s3 cp env/${{ env.TARGET_ENV }}/metadata.json s3://$AWS_ARTIFACT_BUCKET_NAME/${{ env.TARGET_ENV }}/${{ github.sha }}/metadata.json --sse AES256
-        aws s3 cp env/${{ env.TARGET_ENV }}/infracost-report.json s3://$AWS_ARTIFACT_BUCKET_NAME/${{ env.TARGET_ENV }}/${{ github.sha }}/infracost-report.json --sse AES256
-        aws s3 cp env/${{ env.TARGET_ENV }}/.terraform.lock.hcl s3://$AWS_ARTIFACT_BUCKET_NAME/${{ env.TARGET_ENV }}/${{ github.sha }}/.terraform.lock.hcl --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/tfplan s3://terraform-aws-enterprise-state/${{ env.TARGET_ENV }}/${{ github.sha }}/tfplan --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/terraform-plan.txt s3://terraform-aws-enterprise-state/${{ env.TARGET_ENV }}/${{ github.sha }}/terraform-plan.txt --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/terraform-plan.log s3://terraform-aws-enterprise-state/${{ env.TARGET_ENV }}/${{ github.sha }}/terraform-plan.log --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/metadata.json s3://terraform-aws-enterprise-state/${{ env.TARGET_ENV }}/${{ github.sha }}/metadata.json --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/infracost-report.json s3://terraform-aws-enterprise-state/${{ env.TARGET_ENV }}/${{ github.sha }}/infracost-report.json --sse AES256
+        aws s3 cp env/${{ env.TARGET_ENV }}/.terraform.lock.hcl s3://terraform-aws-enterprise-state/${{ env.TARGET_ENV }}/${{ github.sha }}/.terraform.lock.hcl --sse AES256
 
     - name: Upload Plan Artifacts (Logs Only)
       if: always()

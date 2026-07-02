@@ -20,6 +20,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -64,13 +65,34 @@ jobs:
       with:
         terraform_version: 1.5.0
 
+    - name: Resolve Commit SHA
+      id: resolve_sha
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        INPUT_VAL="${{ inputs.commit_sha }}"
+        # Check if input is numeric (GitHub Run ID)
+        if [[ "$INPUT_VAL" =~ ^[0-9]+$ ]]; then
+          echo "Input matches GitHub Run ID format ($INPUT_VAL). Querying API for Head SHA..."
+          PLAN_SHA=$(gh api repos/${{ github.repository }}/actions/runs/$INPUT_VAL --jq '.head_sha')
+          if [ -z "$PLAN_SHA" ] || [ "$PLAN_SHA" == "null" ]; then
+            echo "ERROR: Failed to retrieve Commit SHA for Run ID $INPUT_VAL"
+            exit 1
+          fi
+          echo "Successfully resolved Run ID $INPUT_VAL to Commit SHA: $PLAN_SHA"
+        else
+          PLAN_SHA="$INPUT_VAL"
+          echo "Using input value directly as Commit SHA: $PLAN_SHA"
+        fi
+        echo "sha=$PLAN_SHA" >> $GITHUB_OUTPUT
+
     - name: Download Plan Files from S3
       run: |
-        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ inputs.commit_sha }}/tfplan env/${{ inputs.environment }}/tfplan
-        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ inputs.commit_sha }}/terraform-plan.txt env/${{ inputs.environment }}/terraform-plan.txt
-        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ inputs.commit_sha }}/terraform-plan.log env/${{ inputs.environment }}/terraform-plan.log
-        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ inputs.commit_sha }}/metadata.json env/${{ inputs.environment }}/metadata.json
-        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ inputs.commit_sha }}/.terraform.lock.hcl env/${{ inputs.environment }}/.terraform.lock.hcl.s3
+        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ steps.resolve_sha.outputs.sha }}/tfplan env/${{ inputs.environment }}/tfplan
+        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ steps.resolve_sha.outputs.sha }}/terraform-plan.txt env/${{ inputs.environment }}/terraform-plan.txt
+        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ steps.resolve_sha.outputs.sha }}/terraform-plan.log env/${{ inputs.environment }}/terraform-plan.log
+        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ steps.resolve_sha.outputs.sha }}/metadata.json env/${{ inputs.environment }}/metadata.json
+        aws s3 cp s3://terraform-aws-enterprise-state/${{ inputs.environment }}/${{ steps.resolve_sha.outputs.sha }}/.terraform.lock.hcl env/${{ inputs.environment }}/.terraform.lock.hcl.s3
 
     - name: Terraform Init
       working-directory: ./env/${{ inputs.environment }}
@@ -116,7 +138,7 @@ jobs:
         
         echo "=== Validating Parameters ==="
         echo "Expected Environment: ${{ inputs.environment }} | Found: $METADATA_ENV"
-        echo "Expected Commit SHA: ${{ inputs.commit_sha }} | Found: $METADATA_SHA"
+        echo "Expected Commit SHA: ${{ steps.resolve_sha.outputs.sha }} | Found: $METADATA_SHA"
         echo "Expected Repository: ${{ github.repository }} | Found: $METADATA_REPO"
         echo "Expected TF Version: 1.5.0 | Found: $METADATA_TF"
         echo "Expected Workspace: default | Found: $METADATA_WS"
@@ -130,8 +152,8 @@ jobs:
           exit 1
         fi
         
-        if [ "$METADATA_SHA" != "${{ inputs.commit_sha }}" ]; then
-          echo "ERROR: Commit SHA mismatch! Expected: ${{ inputs.commit_sha }}, Found: $METADATA_SHA"
+        if [ "$METADATA_SHA" != "${{ steps.resolve_sha.outputs.sha }}" ]; then
+          echo "ERROR: Commit SHA mismatch! Expected: ${{ steps.resolve_sha.outputs.sha }}, Found: $METADATA_SHA"
           exit 1
         fi
         

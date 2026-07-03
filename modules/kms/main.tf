@@ -80,7 +80,7 @@ data "aws_iam_policy_document" "default" {
   }
 
   statement {
-    sid    = "AllowAutoScalingToUseKey"
+    sid    = "AllowEKSAndAutoScalingToUseKey"
     effect = "Allow"
     actions = [
       "kms:Encrypt",
@@ -98,13 +98,15 @@ data "aws_iam_policy_document" "default" {
       test     = "ArnLike"
       variable = "aws:PrincipalArn"
       values = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-${var.environment}-eks-cluster-role",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-${var.environment}-eks-node-role"
       ]
     }
   }
 
   statement {
-    sid    = "AllowAutoScalingToCreateGrants"
+    sid    = "AllowEKSAndAutoScalingToCreateGrants"
     effect = "Allow"
     actions = [
       "kms:CreateGrant"
@@ -118,7 +120,9 @@ data "aws_iam_policy_document" "default" {
       test     = "ArnLike"
       variable = "aws:PrincipalArn"
       values = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-${var.environment}-eks-cluster-role",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-${var.environment}-eks-node-role"
       ]
     }
     condition {

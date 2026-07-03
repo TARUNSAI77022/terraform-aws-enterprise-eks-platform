@@ -469,10 +469,9 @@ resource "aws_iam_role_policy_attachment" "cluster_autoscaler" {
 
 # tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_role_policy" "eks_cluster_kms" {
-  # checkov:skip=CKV_AWS_109:KMS permissions management is required for EKS cluster secrets envelope encryption
-  # checkov:skip=CKV_AWS_111:KMS write access is required to encrypt EKS worker node volumes
   # checkov:skip=CKV_AWS_289:KMS permissions management is required for EKS cluster secrets envelope encryption
-  # checkov:skip=CKV_AWS_356:Wildcard resource is required as EKS cluster role must manage grants for node groups dynamically
+  # checkov:skip=CKV_AWS_290:KMS write access is required to encrypt EKS worker node volumes
+  # checkov:skip=CKV_AWS_355:Wildcard resource is required as EKS cluster role must manage grants for node groups dynamically
   name = "${var.project_name}-${var.environment}-eks-cluster-kms-policy"
   role = aws_iam_role.eks_cluster.id
 
@@ -497,10 +496,9 @@ resource "aws_iam_role_policy" "eks_cluster_kms" {
 
 # tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_role_policy" "node_group_kms" {
-  # checkov:skip=CKV_AWS_109:KMS permissions management is required for EKS node group custom KMS volume encryption
-  # checkov:skip=CKV_AWS_111:KMS write access is required to encrypt EKS worker node volumes
   # checkov:skip=CKV_AWS_289:KMS permissions management is required for EKS node group custom KMS volume encryption
-  # checkov:skip=CKV_AWS_356:Wildcard resource is required as EKS node role must manage grants for node groups dynamically
+  # checkov:skip=CKV_AWS_290:KMS write access is required to encrypt EKS worker node volumes
+  # checkov:skip=CKV_AWS_355:Wildcard resource is required as EKS node role must manage grants for node groups dynamically
   name = "${var.project_name}-${var.environment}-eks-node-kms-policy"
   role = aws_iam_role.node_group.id
 

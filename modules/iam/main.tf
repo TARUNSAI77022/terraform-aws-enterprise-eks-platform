@@ -467,10 +467,10 @@ resource "aws_iam_role_policy_attachment" "cluster_autoscaler" {
   role       = aws_iam_role.cluster_autoscaler[0].name
 }
 
-# ------------------------------------------------------------------------------
-# KMS Permissions for EKS Cluster & EKS Nodes (Required for EBS volume encryption)
-# ------------------------------------------------------------------------------
+# tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_role_policy" "eks_cluster_kms" {
+  # checkov:skip=CKV_AWS_290:Wildcard/restrictable action is required by EKS/EC2 AutoScaling design for KMS volume encryption
+  # checkov:skip=CKV_AWS_355:Wildcard/restrictable resource is required as EKS cluster role must manage grants for node groups across the account
   name = "${var.project_name}-${var.environment}-eks-cluster-kms-policy"
   role = aws_iam_role.eks_cluster.id
 
@@ -493,7 +493,10 @@ resource "aws_iam_role_policy" "eks_cluster_kms" {
   })
 }
 
+# tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_role_policy" "node_group_kms" {
+  # checkov:skip=CKV_AWS_290:Wildcard/restrictable action is required by EKS/EC2 AutoScaling design for KMS volume encryption
+  # checkov:skip=CKV_AWS_355:Wildcard/restrictable resource is required as EKS node role must manage grants for node groups across the account
   name = "${var.project_name}-${var.environment}-eks-node-kms-policy"
   role = aws_iam_role.node_group.id
 

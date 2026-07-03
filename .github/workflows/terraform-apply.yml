@@ -47,6 +47,18 @@ jobs:
         aws-region: 'ap-south-1'
         audience: sts.amazonaws.com
 
+    - name: Diagnose Encoded Messages
+      run: |
+        echo "=== Decoded Message 1 ==="
+        aws sts decode-authorization-message --encoded-message TGxIxALsXIBo2U-BAY09Li_Nee43-1Mr5quYo1tKDFAMCrtWEaYd6yo-roxXI9wGBCQKim6ARS35MwEOsDsSSp4IwAX2lkE3VQQ74aXwEEXV4k0kTyvNdF7eC5lQwJhVZFhmI_407u73OfTiWg1oE32kyhSa2fcJLfLPGxNMlckm1wlaTkXZGZtUtkn__vO8P27aEjLCK2NDST3rxvEO2SxNcWHEfVpkWooWVW9UCTI_0Z6clQTXoMC37m6tlkHsRbKjySsjJjLLrhacGjykXvyNLqN8jBcKCEWgm087z7GL2IidxzrNIZtjJ6GYPGYjWpAswn4q2ptJGc-nA1SRMxF6vRL9y5gqq-3Bi0cPInWvQIUAAZf8fIlS2mhRm8kVR3mFht666WQBGoisnapTfzEc6-bSQBB93e0Tj2B_Cs4l8qcbN_QmhiTcuDL65UQ3rvn9gjJrf-g9A_DW7OXi0IKMizwJI3DPHOzZ355J6PFC6X01iuo3Ku0iXGuw8oElv83Z-0a_WJP6i_ovD-Ozo3YnC6S2kYQAFS1NMbQ9B4vZyA6ELq-p5UdbaTMhfhNH4TnBcZTDx37TTsVSq1IyldrebUccQVN1fjMEcl8W4gX-SYQ5SZkHt6j_IVUBmmJ635 || true
+        echo "=== Decoded Message 2 ==="
+        aws sts decode-authorization-message --encoded-message vAl1NA-86k6eXq893A2hL5Oaoh5QieWYKzF_4NGV9Vlibwk9kgfjxKycXBvvpbMbJyl9UNh3At5_HroW59bRU7OUxpQ52JdT52Shy5w5gMlJ3uwGK4Ir1zX-y9s2fFA_BcEFHJwFuvGeddb1ahASNzkQ6bhQ1nZ74fgU3DUPI53SpQQXdQlNi-TSHWN-vuD64dsGHeKwMehE0mJczuYBqo0GDj36Hz_OZJ2CrBzzfr_qWMwOyllgRyOIaBVE45Y8JQDBFwFfL4-25Dz1l1xt4jt5jRHKx8WcSurY3zslzX2p4pNFTU0rYWq6yZStMCLoVwXMqBpotomTHW9QY9qUkEjqy8cLRoQkvOn1BrZDxUrByRdpqdamHZLBFopbHQ1A0xbZp9XSrTVG3IQrBusw-6uQcqZxp4tuGjeB5DB8OoDvL4wSV423nQTBQfF8g6OF-rRHosQisVd6U41P5RmxNBXIBH9U0wmDOPjHyKqYtESOKe6im5cvytan3K774kMfvjhHH628_pTJ8468YDy-uViupjiVyJs1ly36D4OMDtIpzgikcerVYoH0rSycTqUsEH7qyf_lvfOLsTTFsvHdzcLlH85Ra8I8W2lZ8XgcQKIvUddxgRGqLAhRl86G || true
+        echo "=== Decoded Message 3 ==="
+        aws sts decode-authorization-message --encoded-message 0-U1ZfHvBCge7hFjgGBC5y4RyAMj537odcQytvgXkbN0I-A31kqMx74SnHrU128N25PUadXafXmFOPo6sZC2MpSBvpMZY0OW4q9R9ZrotSGWmMXJMAq6EuMlc0FkdJpugBsrgcNsN43YfcschIo4N4GCABAvp5SLvKe1gGva9QGGFepaUHvlCyI00RCDJypyPIJBARSfe8-mP11s9hrBvF5kDEPt1T42kaoDjewGBBdtNCSamgihoCA9kYD6zT_Tqntm19IiHTWFCOfXS8z4aveE9k4Y9YJ7mjvTVFK8Hb3V0yb7s-5JP8NmN8Dp4-K20sAXhwmjwGaYOYp9agzAgr6TaiWOuSW2pKf6AcDKbrKgJDBtpkNiqNQHSK2pl9CmvzFH0rkItI0AEcgrxtl_gCqjzNBnfHsch2PHl2Rft3iwCRFnD8qDmkonC52NtY7jPaEcgoqGZdDyef_cs7ADmD4zn0OGyktbOKvy86a_shCGOxvZtkRbgTX4F9VjRkTgAXcjg9teNkDJw3PnquxJpQa6AzdCq64b-NvrHTLEUFNnCe3qhLdtvsVuhai0Wet5LW2ctZKI3dPW5ZhwjmXhRYYvBiX6KdkxsZZGlAg-vAgZxK-6LgkYt4zp81tH || true
+        echo "=== Decoded Message 4 ==="
+        aws sts decode-authorization-message --encoded-message cNh2nkMgW8DelBFUhTCZ09ndbZbX2kpH7aL0jJfFRAjKhL4uZfSgVVM1sWdsHD1l0DrZ6rd8-DUOA2lFFmaYSTXaIWXjLU_i0taRvY7Q21-y-ZsZ329K4e0i--_CNplswb8rykTlxExWa57XET3CQxNMIudolaRC_3-d0J5zvXXA8W3F4jcbj2cZXAdraB_NWBFM2UWPMwpeW5YWcMec1-r5eqAdpAVN8a_1qdCOzk7-R1Vqtfm7fC3eWyne9o6kHU37HbTa7FP5XQLiZLB-dFrUbT6a-RSU_x-M2LHvyyITrqbDQ9R-sAogMyDImbMF_Rtj50vZYBqNHj2LhJixJI45rPPYhGNFU4XtCPcwhn-4IpaDmU9dLFL7a2MwP3_JTuYrOfN83tWaBcPEPpUE1428_Ds88Z9ol1_HOqqGojvqZ-47HrKFOdzJzWVNn_a40Dl_nEOb98V8bRLODA6rv42Fl_NIDRGuBKIS-h0-y_tudp-ETR8QbY5mvx1oqPlqKGpfldnZqiQGQbnwUsjOCPJPSsZRFQLnNdbCylVgONACbgYW5Qa9eD2w9xGVThrDaI81_w9SxPFsu8_hS16BVSpR8s5v7q4TId2fxdsbUrUYuIm4ehAhhVqMb4qiY2kWRO || true
+      continue-on-error: true
+
     - name: Configure Terraform Plugin Cache
       run: |
         mkdir -p ~/.terraform.d/plugin-cache

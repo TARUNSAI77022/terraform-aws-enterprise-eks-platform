@@ -269,7 +269,7 @@ variable "node_groups" {
   }))
   default = {
     system = {
-      instance_types = ["t3.medium"]
+      instance_types = ["t3.micro"]
       capacity_type  = "ON_DEMAND"
       min_size       = 1
       max_size       = 3
@@ -277,7 +277,7 @@ variable "node_groups" {
       disk_size      = 50
     }
     applications = {
-      instance_types = ["t3.medium"]
+      instance_types = ["t3.micro"]
       capacity_type  = "SPOT"
       min_size       = 1
       max_size       = 5

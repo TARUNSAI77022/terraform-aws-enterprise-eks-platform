@@ -133,6 +133,59 @@ data "aws_iam_policy_document" "default" {
       values   = ["true"]
     }
   }
+
+  statement {
+    sid    = "AllowServicesToUseKey"
+    effect = "Allow"
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey"
+    ]
+    resources = ["*"]
+    principals {
+      type        = "Service"
+      identifiers = [
+        "eks.amazonaws.com",
+        "ec2.amazonaws.com",
+        "autoscaling.amazonaws.com"
+      ]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    sid    = "AllowServicesToCreateGrants"
+    effect = "Allow"
+    actions = [
+      "kms:CreateGrant"
+    ]
+    resources = ["*"]
+    principals {
+      type        = "Service"
+      identifiers = [
+        "eks.amazonaws.com",
+        "ec2.amazonaws.com",
+        "autoscaling.amazonaws.com"
+      ]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+    condition {
+      test     = "Bool"
+      variable = "kms:GrantIsForAWSResource"
+      values   = ["true"]
+    }
+  }
 }
 
 data "aws_iam_policy_document" "cloudwatch" {

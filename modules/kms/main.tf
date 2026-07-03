@@ -204,9 +204,9 @@ data "aws_iam_policy_document" "cloudwatch" {
   }
 
   statement {
-    sid    = "AllowCloudWatchLogs"
-    effect = "Allow"
-    actions = [
+    sid       = "AllowCloudWatchLogs"
+    effect    = "Allow"
+    actions   = [
       "kms:Encrypt*",
       "kms:Decrypt*",
       "kms:ReEncrypt*",

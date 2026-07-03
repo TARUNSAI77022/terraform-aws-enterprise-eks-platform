@@ -80,9 +80,9 @@ data "aws_iam_policy_document" "default" {
   }
 
   statement {
-    sid       = "AllowEKSAndAutoScalingToUseKey"
-    effect    = "Allow"
-    actions   = [
+    sid    = "AllowEKSAndAutoScalingToUseKey"
+    effect = "Allow"
+    actions = [
       "kms:Encrypt",
       "kms:Decrypt",
       "kms:ReEncrypt*",
@@ -97,7 +97,7 @@ data "aws_iam_policy_document" "default" {
     condition {
       test     = "ArnLike"
       variable = "aws:PrincipalArn"
-      values   = [
+      values = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-${var.environment}-eks-cluster-role",
@@ -107,9 +107,9 @@ data "aws_iam_policy_document" "default" {
   }
 
   statement {
-    sid       = "AllowEKSAndAutoScalingToCreateGrants"
-    effect    = "Allow"
-    actions   = [
+    sid    = "AllowEKSAndAutoScalingToCreateGrants"
+    effect = "Allow"
+    actions = [
       "kms:CreateGrant"
     ]
     resources = ["*"]
@@ -120,7 +120,7 @@ data "aws_iam_policy_document" "default" {
     condition {
       test     = "ArnLike"
       variable = "aws:PrincipalArn"
-      values   = [
+      values = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-${var.environment}-eks-cluster-role",
@@ -135,9 +135,9 @@ data "aws_iam_policy_document" "default" {
   }
 
   statement {
-    sid       = "AllowServicesToUseKey"
-    effect    = "Allow"
-    actions   = [
+    sid    = "AllowServicesToUseKey"
+    effect = "Allow"
+    actions = [
       "kms:Encrypt",
       "kms:Decrypt",
       "kms:ReEncrypt*",
@@ -146,7 +146,7 @@ data "aws_iam_policy_document" "default" {
     ]
     resources = ["*"]
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "eks.amazonaws.com",
         "ec2.amazonaws.com",
@@ -161,14 +161,14 @@ data "aws_iam_policy_document" "default" {
   }
 
   statement {
-    sid       = "AllowServicesToCreateGrants"
-    effect    = "Allow"
-    actions   = [
+    sid    = "AllowServicesToCreateGrants"
+    effect = "Allow"
+    actions = [
       "kms:CreateGrant"
     ]
     resources = ["*"]
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "eks.amazonaws.com",
         "ec2.amazonaws.com",
@@ -204,9 +204,9 @@ data "aws_iam_policy_document" "cloudwatch" {
   }
 
   statement {
-    sid       = "AllowCloudWatchLogs"
-    effect    = "Allow"
-    actions   = [
+    sid    = "AllowCloudWatchLogs"
+    effect = "Allow"
+    actions = [
       "kms:Encrypt*",
       "kms:Decrypt*",
       "kms:ReEncrypt*",

@@ -92,7 +92,14 @@ data "aws_iam_policy_document" "default" {
     resources = ["*"]
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
+      identifiers = ["*"]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+      ]
     }
   }
 
@@ -105,7 +112,14 @@ data "aws_iam_policy_document" "default" {
     resources = ["*"]
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
+      identifiers = ["*"]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+      ]
     }
     condition {
       test     = "Bool"

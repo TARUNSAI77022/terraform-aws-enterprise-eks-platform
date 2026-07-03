@@ -4,7 +4,6 @@ resource "aws_launch_template" "this" {
 
   name_prefix   = "${var.project_name}-${var.environment}-node-${each.key}-"
   description   = "Launch template for EKS Managed Node Group: ${each.key}"
-  instance_type = each.value.instance_types[0]
 
   block_device_mappings {
     device_name = "/dev/xvda"

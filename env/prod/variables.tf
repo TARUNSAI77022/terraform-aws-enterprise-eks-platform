@@ -154,7 +154,7 @@ variable "alb_ingress_cidr_blocks" {
 variable "kubernetes_version" {
   description = "The target Kubernetes version"
   type        = string
-  default     = "1.30"
+  default     = "1.31"
 }
 
 variable "coredns_version" {
@@ -166,7 +166,7 @@ variable "coredns_version" {
 variable "kube_proxy_version" {
   description = "kube-proxy addon version"
   type        = string
-  default     = "v1.30.0-eksbuild.3"
+  default     = "v1.31.0-eksbuild.5"
 }
 
 variable "vpc_cni_version" {
@@ -178,7 +178,7 @@ variable "vpc_cni_version" {
 variable "ebs_csi_version" {
   description = "EBS CSI Driver addon version"
   type        = string
-  default     = "v1.30.0-eksbuild.1"
+  default     = "v1.31.0-eksbuild.1"
 }
 
 variable "aws_load_balancer_controller_version" {

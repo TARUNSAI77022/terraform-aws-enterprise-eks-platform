@@ -100,12 +100,14 @@ locals {
 }
 
 resource "aws_eks_access_entry" "caller" {
+  count         = var.create_caller_access_entry ? 1 : 0
   cluster_name  = aws_eks_cluster.this.name
   principal_arn = local.resolved_caller_arn
   type          = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "caller" {
+  count         = var.create_caller_access_entry ? 1 : 0
   cluster_name  = aws_eks_cluster.this.name
   policy_arn    = "arn:aws:iam::aws:policy/AmazonEKSClusterAdminPolicy"
   principal_arn = local.resolved_caller_arn

@@ -138,10 +138,11 @@ module "eks" {
   create_oidc_provider    = var.create_oidc_provider
   oidc_provider_arn       = var.oidc_provider_arn
   oidc_provider_url       = var.oidc_provider_url
-  authentication_mode     = var.authentication_mode
-  access_entries          = var.access_entries
-  tags                    = local.tags
-  node_role_arn           = module.iam.node_group_role_arn
+  authentication_mode        = var.authentication_mode
+  access_entries             = var.access_entries
+  tags                       = local.tags
+  node_role_arn              = module.iam.node_group_role_arn
+  create_caller_access_entry = true
 
   depends_on = [module.cloudwatch]
 }

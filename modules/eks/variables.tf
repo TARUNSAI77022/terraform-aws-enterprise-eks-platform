@@ -115,4 +115,11 @@ variable "enable_node_access_entry" {
   default     = true
 }
 
+variable "create_caller_access_entry" {
+  description = "Whether Terraform should create the caller EKS Access Entry."
+  type        = bool
+  default     = true
+}
+
+
 

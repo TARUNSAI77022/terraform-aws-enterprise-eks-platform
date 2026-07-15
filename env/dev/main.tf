@@ -163,11 +163,28 @@ module "node_groups" {
   node_groups            = var.node_groups
   tags                   = local.tags
 
-  depends_on = [module.addons]
+  depends_on = [module.vpc_cni]
 }
 
 # ------------------------------------------------------------------------------
-# 9. CoreDNS, kube-proxy, and VPC CNI EKS Add-ons (Phase 2)
+# 9a. Bootstrap EKS Add-ons (Phase 2 - Before Node Groups)
+# ------------------------------------------------------------------------------
+module "vpc_cni" {
+  source = "../../modules/addons"
+
+  cluster_name    = module.eks.cluster_name
+  vpc_cni_version = var.vpc_cni_version
+  tags            = local.tags
+
+  enable_vpc_cni    = true
+  enable_coredns    = false
+  enable_kube_proxy = false
+
+  depends_on = [module.eks]
+}
+
+# ------------------------------------------------------------------------------
+# 9b. Runtime EKS Add-ons (Phase 2 - After Node Groups)
 # ------------------------------------------------------------------------------
 module "addons" {
   source = "../../modules/addons"
@@ -175,10 +192,13 @@ module "addons" {
   cluster_name       = module.eks.cluster_name
   coredns_version    = var.coredns_version
   kube_proxy_version = var.kube_proxy_version
-  vpc_cni_version    = var.vpc_cni_version
   tags               = local.tags
 
-  depends_on = [module.eks]
+  enable_vpc_cni    = false
+  enable_coredns    = true
+  enable_kube_proxy = true
+
+  depends_on = [module.node_groups]
 }
 
 # ------------------------------------------------------------------------------
@@ -259,3 +279,22 @@ module "velero_scaffold" {
 module "monitoring_scaffold" {
   source = "../../modules/monitoring"
 }
+
+# ------------------------------------------------------------------------------
+# State Migration Moved Blocks (Idempotent Lifecycle Management)
+# ------------------------------------------------------------------------------
+moved {
+  from = module.addons.aws_eks_addon.coredns
+  to   = module.addons.aws_eks_addon.coredns[0]
+}
+
+moved {
+  from = module.addons.aws_eks_addon.kube_proxy
+  to   = module.addons.aws_eks_addon.kube_proxy[0]
+}
+
+moved {
+  from = module.addons.aws_eks_addon.vpc_cni
+  to   = module.vpc_cni.aws_eks_addon.vpc_cni[0]
+}
+

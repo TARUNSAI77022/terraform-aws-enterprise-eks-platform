@@ -141,6 +141,7 @@ module "eks" {
   authentication_mode     = var.authentication_mode
   access_entries          = var.access_entries
   tags                    = local.tags
+  node_role_arn           = module.iam.node_group_role_arn
 
   depends_on = [module.cloudwatch]
 }
@@ -161,7 +162,7 @@ module "node_groups" {
   node_groups            = var.node_groups
   tags                   = local.tags
 
-  depends_on = [module.eks]
+  depends_on = [module.addons]
 }
 
 # ------------------------------------------------------------------------------
@@ -176,7 +177,7 @@ module "addons" {
   vpc_cni_version    = var.vpc_cni_version
   tags               = local.tags
 
-  depends_on = [module.node_groups]
+  depends_on = [module.eks]
 }
 
 # ------------------------------------------------------------------------------
@@ -190,7 +191,7 @@ module "ebs_csi" {
   irsa_role_arn   = module.iam.ebs_csi_role_arn
   tags            = local.tags
 
-  depends_on = [module.addons]
+  depends_on = [module.node_groups]
 }
 
 # ------------------------------------------------------------------------------
@@ -199,6 +200,7 @@ module "ebs_csi" {
 module "metrics_server" {
   source = "../../modules/metrics-server"
 
+  enable        = false
   chart_version = var.metrics_server_version
   tags          = local.tags
 
@@ -217,7 +219,7 @@ module "aws_load_balancer_controller" {
   vpc_id        = module.vpc.vpc_id
   chart_version = var.aws_load_balancer_controller_version
 
-  depends_on = [module.metrics_server]
+  depends_on = [module.ebs_csi]
 }
 
 # ------------------------------------------------------------------------------

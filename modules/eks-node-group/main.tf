@@ -65,7 +65,7 @@ resource "aws_eks_node_group" "this" {
 
   launch_template {
     id      = aws_launch_template.this[each.key].id
-    version = aws_launch_template.this[each.key].default_version
+    version = aws_launch_template.this[each.key].latest_version
   }
 
   labels = each.value.labels

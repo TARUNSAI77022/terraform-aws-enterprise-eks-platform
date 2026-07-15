@@ -102,3 +102,10 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "node_role_arn" {
+  description = "The ARN of the IAM role for the EKS node group to map as an EC2_LINUX access entry"
+  type        = string
+  default     = ""
+}
+

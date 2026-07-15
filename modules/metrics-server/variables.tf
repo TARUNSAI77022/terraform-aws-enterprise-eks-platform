@@ -9,3 +9,10 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable" {
+  description = "Whether to deploy the Metrics Server Helm release"
+  type        = bool
+  default     = true
+}
+

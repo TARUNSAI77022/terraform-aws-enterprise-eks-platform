@@ -85,3 +85,42 @@ resource "aws_eks_access_policy_association" "this" {
 
   depends_on = [aws_eks_access_entry.this]
 }
+
+# ------------------------------------------------------------------------------
+# Automated Access Entries for Executing Principal and Worker Nodes
+# ------------------------------------------------------------------------------
+data "aws_caller_identity" "current" {}
+
+locals {
+  caller_arn          = data.aws_caller_identity.current.arn
+  is_assumed_role     = can(regex("^arn:aws:sts::[0-9]+:assumed-role/", local.caller_arn))
+  account_id          = data.aws_caller_identity.current.account_id
+  role_name           = local.is_assumed_role ? split("/", split("assumed-role/", local.caller_arn)[1])[0] : ""
+  resolved_caller_arn = local.is_assumed_role ? "arn:aws:iam::${local.account_id}:role/${local.role_name}" : local.caller_arn
+}
+
+resource "aws_eks_access_entry" "caller" {
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = local.resolved_caller_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "caller" {
+  cluster_name  = aws_eks_cluster.this.name
+  policy_arn    = "arn:aws:iam::aws:policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = local.resolved_caller_arn
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.caller]
+}
+
+resource "aws_eks_access_entry" "node_group" {
+  count         = var.node_role_arn != "" ? 1 : 0
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = var.node_role_arn
+  type          = "EC2_LINUX"
+}
+

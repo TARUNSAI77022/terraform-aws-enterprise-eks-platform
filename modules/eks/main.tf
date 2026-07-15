@@ -118,7 +118,7 @@ resource "aws_eks_access_policy_association" "caller" {
 }
 
 resource "aws_eks_access_entry" "node_group" {
-  count         = var.node_role_arn != "" ? 1 : 0
+  count         = var.enable_node_access_entry ? 1 : 0
   cluster_name  = aws_eks_cluster.this.name
   principal_arn = var.node_role_arn
   type          = "EC2_LINUX"

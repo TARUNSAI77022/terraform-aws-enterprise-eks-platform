@@ -109,3 +109,10 @@ variable "node_role_arn" {
   default     = ""
 }
 
+variable "enable_node_access_entry" {
+  description = "Whether to create the EKS access entry for the node group. This breaks the plan-time dependency cycle with computed IAM roles."
+  type        = bool
+  default     = true
+}
+
+

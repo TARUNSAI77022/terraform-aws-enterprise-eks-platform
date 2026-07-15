@@ -226,7 +226,7 @@ variable "endpoint_private_access" {
 variable "endpoint_public_access" {
   description = "Enable EKS public API server endpoint access"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "public_access_cidrs" {

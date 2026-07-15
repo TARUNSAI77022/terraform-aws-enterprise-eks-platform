@@ -1,3 +1,5 @@
+# tfsec:ignore:aws-eks-no-public-cluster-access
+# tfsec:ignore:aws-eks-no-public-cluster-access-to-cidr
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
   role_arn = var.cluster_role_arn

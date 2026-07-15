@@ -31,6 +31,13 @@ resource "aws_eks_addon" "vpc_cni" {
   addon_name    = "vpc-cni"
   addon_version = var.vpc_cni_version
 
+  configuration_values = jsonencode({
+    env = {
+      ENABLE_PREFIX_DELEGATION = "true"
+      WARM_PREFIX_TARGET       = "1"
+    }
+  })
+
   tags = merge(
     var.tags,
     {

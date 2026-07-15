@@ -124,20 +124,20 @@ module "ecr" {
 module "eks" {
   source = "../../modules/eks"
 
-  project_name            = var.project_name
-  environment             = var.environment
-  cluster_name            = "${var.project_name}-${var.environment}-eks"
-  kubernetes_version      = var.kubernetes_version
-  cluster_role_arn        = module.iam.eks_cluster_role_arn
-  subnet_ids              = module.vpc.private_subnet_ids
-  security_group_ids      = [module.security_groups.eks_cluster_sg_id]
-  endpoint_private_access = var.endpoint_private_access
-  endpoint_public_access  = var.endpoint_public_access
-  public_access_cidrs     = var.public_access_cidrs
-  kms_key_arn             = module.kms.eks_kms_key_arn
-  create_oidc_provider    = var.create_oidc_provider
-  oidc_provider_arn       = var.oidc_provider_arn
-  oidc_provider_url       = var.oidc_provider_url
+  project_name               = var.project_name
+  environment                = var.environment
+  cluster_name               = "${var.project_name}-${var.environment}-eks"
+  kubernetes_version         = var.kubernetes_version
+  cluster_role_arn           = module.iam.eks_cluster_role_arn
+  subnet_ids                 = module.vpc.private_subnet_ids
+  security_group_ids         = [module.security_groups.eks_cluster_sg_id]
+  endpoint_private_access    = var.endpoint_private_access
+  endpoint_public_access     = var.endpoint_public_access
+  public_access_cidrs        = var.public_access_cidrs
+  kms_key_arn                = module.kms.eks_kms_key_arn
+  create_oidc_provider       = var.create_oidc_provider
+  oidc_provider_arn          = var.oidc_provider_arn
+  oidc_provider_url          = var.oidc_provider_url
   authentication_mode        = var.authentication_mode
   access_entries             = var.access_entries
   tags                       = local.tags

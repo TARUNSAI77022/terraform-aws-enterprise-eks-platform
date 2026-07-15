@@ -1,5 +1,14 @@
 locals {
   name_prefix = var.project_name
+
+  # Ensure Target Group names include project name, environment, and service color/name.
+  # AWS enforces a maximum length of 32 characters for target group names.
+  # We restrict project_prefix length dynamically to keep the final names within 32 characters.
+  max_proj_len  = 32 - 10 - length(var.environment) # "-green-tg" is 9 chars + 1 hyphen = 10
+  proj_prefix   = substr(var.project_name, 0, local.max_proj_len)
+
+  tg_blue_name  = "${local.proj_prefix}-${var.environment}-blue-tg"
+  tg_green_name = "${local.proj_prefix}-${var.environment}-green-tg"
 }
 
 # ------------------------------------------------------------------------------
@@ -54,7 +63,7 @@ resource "aws_lb" "main" {
 # Target Groups (Blue / Green)
 # ------------------------------------------------------------------------------
 resource "aws_lb_target_group" "blue" {
-  name        = "${local.name_prefix}-tg-blue"
+  name        = local.tg_blue_name
   port        = 5000
   protocol    = "HTTP"
   target_type = "ip"
@@ -79,7 +88,7 @@ resource "aws_lb_target_group" "blue" {
 }
 
 resource "aws_lb_target_group" "green" {
-  name        = "${local.name_prefix}-tg-green"
+  name        = local.tg_green_name
   port        = 5000
   protocol    = "HTTP"
   target_type = "ip"

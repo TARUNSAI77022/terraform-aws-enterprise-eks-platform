@@ -90,6 +90,14 @@ resource "aws_security_group" "app_node_sg" {
     self        = true
   }
 
+  ingress {
+    description = "Allow EKS control plane webhooks on port 9443"
+    from_port   = 9443
+    to_port     = 9443
+    protocol    = "tcp"
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
+  }
+
   # Outbound rules (Least privilege egress)
   egress {
     description = "Allow internal communication within the VPC"
@@ -232,6 +240,14 @@ resource "aws_security_group" "eks_cluster_sg" {
     description     = "Allow control plane to reach nodes on HTTPS"
     from_port       = 443
     to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app_node_sg.id]
+  }
+
+  egress {
+    description     = "Allow control plane to reach AWS LB webhook on port 9443"
+    from_port       = 9443
+    to_port         = 9443
     protocol        = "tcp"
     security_groups = [aws_security_group.app_node_sg.id]
   }

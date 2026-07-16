@@ -105,6 +105,15 @@ This project extends the Phase 1 Cloud Foundation with an enterprise-grade, HIPA
 For full implementation details, architectural diagrams, and design decisions, see the [walkthrough.md](file:///C:/Users/Tarun/.gemini/antigravity-ide/brain/20d9822d-d7ba-4a7d-8c75-e34dbda16037/walkthrough.md).
 For operational upgrade playbooks, see [docs/UPGRADE.md](file:///d:/terraform-hippa/docs/UPGRADE.md).
 
+### 🔑 EKS Access Entry Management
+
+The EKS module manages access entries to the EKS cluster using the modern `aws_eks_access_entry` resource. To prevent `ResourceInUseException` during deployment (e.g., if the execution role already has an access entry or it was bootstrapped externally):
+
+- **`create_caller_access_entry = true`** (Default): Use for the first deployment of a new cluster. Terraform will bootstrap and manage the caller Access Entry.
+- **`create_caller_access_entry = false`**: Use when the Access Entry already exists (either created manually, bootstrapped externally, or imported into Terraform state). Terraform will skip creating it to prevent conflicts.
+
+Configure this value in your environment's `main.tf` file under the `eks` module block based on the state of the cluster deployment.
+
 ## 🚀 Getting Started Locally
 
 ### Prerequisites

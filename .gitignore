@@ -29,3 +29,11 @@ override.tf.json
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
 *tfplan*
+
+# Agent configs and generated roles
+.agent/
+roles/
+
+# License and lock files
+LICENSE.txt
+**/.terraform.lock.hcl

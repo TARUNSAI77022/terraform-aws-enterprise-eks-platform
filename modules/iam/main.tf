@@ -82,7 +82,7 @@ resource "aws_iam_role_policy_attachment" "node_ssm_policy" {
 # 3. Amazon EBS CSI Driver IAM Role (IRSA)
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "ebs_csi" {
-  name  = "${var.project_name}-${var.environment}-ebs-csi-role"
+  name = "${var.project_name}-${var.environment}-ebs-csi-role"
 
   assume_role_policy = data.aws_iam_policy_document.ebs_csi_trust.json
 
@@ -125,7 +125,7 @@ resource "aws_iam_role_policy_attachment" "ebs_csi" {
 # 4. AWS Load Balancer Controller IAM Role (IRSA)
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "aws_lb_controller" {
-  name  = "${var.project_name}-${var.environment}-aws-lb-controller-role"
+  name = "${var.project_name}-${var.environment}-aws-lb-controller-role"
 
   assume_role_policy = data.aws_iam_policy_document.aws_lb_controller_trust.json
 
@@ -383,7 +383,7 @@ resource "aws_iam_role_policy_attachment" "aws_lb_controller" {
 # 5. Cluster Autoscaler IAM Role (IRSA)
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "cluster_autoscaler" {
-  name  = "${var.project_name}-${var.environment}-cluster-autoscaler-role"
+  name = "${var.project_name}-${var.environment}-cluster-autoscaler-role"
 
   assume_role_policy = data.aws_iam_policy_document.cluster_autoscaler_trust.json
 

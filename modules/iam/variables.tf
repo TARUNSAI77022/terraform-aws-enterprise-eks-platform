@@ -26,6 +26,7 @@ variable "tags" {
   default     = {}
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "create_oidc_provider" {
   description = "Whether to create/use the OIDC provider (controls EKS/OIDC roles creation)"
   type        = bool

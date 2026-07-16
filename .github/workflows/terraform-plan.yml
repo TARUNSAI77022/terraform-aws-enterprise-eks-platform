@@ -70,26 +70,46 @@ jobs:
     - name: Pre-Plan Diagnostic Debugging
       working-directory: ./env/${{ env.TARGET_ENV }}
       run: |
-        echo "=== Terraform Version ==="
+        echo "========== Terraform Version =========="
         terraform version
-        echo "=== Current Working Directory ==="
+        echo "========== Current Working Directory =========="
         pwd
-        echo "=== Listing Directory Contents ==="
+        echo "========== Listing Directory Contents =========="
         ls -la
-        echo "=== Finding Terraform Files ==="
+        echo "========== Finding Terraform Files =========="
         find . -maxdepth 1 -name "*.tf"
-        echo "=== Provider Configurations ==="
+        echo "========== Terraform Providers =========="
         terraform providers
-        echo "=== Terraform Workspace ==="
+        echo "========== Terraform Workspace =========="
         terraform workspace show
-        echo "=== Terraform State List ==="
+        terraform workspace list
+        echo "========== Terraform State Resources =========="
         terraform state list || true
-        echo "=== Specific Resource State Show ==="
-        terraform state show module.iam.aws_iam_policy.aws_load_balancer_controller || echo "No instance found"
-        terraform state show module.iam.aws_iam_policy.cluster_autoscaler || echo "No instance found"
-        terraform state show module.kms.aws_kms_alias.eks || echo "No instance found"
-        terraform state show module.kms.aws_kms_alias.cloudwatch || echo "No instance found"
-        terraform state show module.kms.aws_kms_alias.ecr || echo "No instance found"
+        echo "========== Specific Resource State Show =========="
+        terraform state show module.iam.aws_iam_policy.aws_load_balancer_controller || echo "Resource not found in the CURRENT active state. Possible causes: Missing from state, Wrong backend, Wrong workspace, Wrong resource address."
+        terraform state show module.iam.aws_iam_policy.cluster_autoscaler || echo "Resource not found in the CURRENT active state. Possible causes: Missing from state, Wrong backend, Wrong workspace, Wrong resource address."
+        terraform state show module.kms.aws_kms_alias.eks || echo "Resource not found in the CURRENT active state. Possible causes: Missing from state, Wrong backend, Wrong workspace, Wrong resource address."
+        terraform state show module.kms.aws_kms_alias.cloudwatch || echo "Resource not found in the CURRENT active state. Possible causes: Missing from state, Wrong backend, Wrong workspace, Wrong resource address."
+        terraform state show module.kms.aws_kms_alias.ecr || echo "Resource not found in the CURRENT active state. Possible causes: Missing from state, Wrong backend, Wrong workspace, Wrong resource address."
+        echo "========== Existing AWS Resources =========="
+        export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        aws iam get-policy --policy-arn arn:aws:iam::${AWS_ACCOUNT_ID}:policy/cloud-foundation-${{ env.TARGET_ENV }}-aws-lb-controller-policy || true
+        aws iam get-policy --policy-arn arn:aws:iam::${AWS_ACCOUNT_ID}:policy/cloud-foundation-${{ env.TARGET_ENV }}-cluster-autoscaler-policy || true
+        aws kms list-aliases --query "Aliases[?starts_with(AliasName,'alias/cloud-foundation-${{ env.TARGET_ENV }}')]" || true
+        echo "========== Pulling Full State File =========="
+        terraform state pull > state.json || echo "{}" > state.json
+        echo "========== Creating Diagnostics File =========="
+        echo "=== Diagnostics Report ===" > diagnostics.txt
+        echo "=== Version ===" >> diagnostics.txt
+        terraform version >> diagnostics.txt
+        echo "=== Workspace ===" >> diagnostics.txt
+        terraform workspace show >> diagnostics.txt
+        echo "=== Workspace List ===" >> diagnostics.txt
+        terraform workspace list >> diagnostics.txt
+        echo "=== Providers ===" >> diagnostics.txt
+        terraform providers >> diagnostics.txt
+        echo "=== State List ===" >> diagnostics.txt
+        terraform state list >> diagnostics.txt 2>&1 || true
 
     - name: Terraform Plan
       working-directory: ./env/${{ env.TARGET_ENV }}
@@ -104,7 +124,9 @@ jobs:
 
     - name: Terraform Plan Text
       working-directory: ./env/${{ env.TARGET_ENV }}
-      run: terraform show -no-color tfplan > terraform-plan.txt
+      run: |
+        terraform show -no-color tfplan > terraform-plan.txt
+        terraform show -json tfplan > plan.json || echo "{}" > plan.json
       continue-on-error: true
 
     # Setup Infracost for Monthly Cost Estimation
@@ -204,5 +226,8 @@ jobs:
           env/${{ env.TARGET_ENV }}/terraform-plan.log
           env/${{ env.TARGET_ENV }}/terraform-plan.txt
           env/${{ env.TARGET_ENV }}/infracost-report.json
+          env/${{ env.TARGET_ENV }}/state.json
+          env/${{ env.TARGET_ENV }}/plan.json
+          env/${{ env.TARGET_ENV }}/diagnostics.txt
         if-no-files-found: ignore
         retention-days: 14

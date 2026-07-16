@@ -84,6 +84,12 @@ jobs:
         terraform workspace show
         echo "=== Terraform State List ==="
         terraform state list || true
+        echo "=== Specific Resource State Show ==="
+        terraform state show module.iam.aws_iam_policy.aws_load_balancer_controller || echo "No instance found"
+        terraform state show module.iam.aws_iam_policy.cluster_autoscaler || echo "No instance found"
+        terraform state show module.kms.aws_kms_alias.eks || echo "No instance found"
+        terraform state show module.kms.aws_kms_alias.cloudwatch || echo "No instance found"
+        terraform state show module.kms.aws_kms_alias.ecr || echo "No instance found"
 
     - name: Terraform Plan
       working-directory: ./env/${{ env.TARGET_ENV }}

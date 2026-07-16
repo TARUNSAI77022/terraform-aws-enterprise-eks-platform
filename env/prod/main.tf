@@ -212,7 +212,7 @@ module "ebs_csi" {
   irsa_role_arn   = module.iam.ebs_csi_role_arn
   tags            = local.tags
 
-  depends_on = [module.node_groups]
+  depends_on = [module.node_groups, module.addons]
 }
 
 # ------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ module "metrics_server" {
   chart_version = var.metrics_server_version
   tags          = local.tags
 
-  depends_on = [module.ebs_csi]
+  depends_on = [module.ebs_csi, module.addons]
 }
 
 # ------------------------------------------------------------------------------
@@ -240,7 +240,7 @@ module "aws_load_balancer_controller" {
   vpc_id        = module.vpc.vpc_id
   chart_version = var.aws_load_balancer_controller_version
 
-  depends_on = [module.metrics_server]
+  depends_on = [module.metrics_server, module.addons]
 }
 
 # ------------------------------------------------------------------------------

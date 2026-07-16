@@ -10,15 +10,15 @@ output "node_group_role_arn" {
 
 output "ebs_csi_role_arn" {
   description = "The ARN of the EBS CSI Driver IAM Role"
-  value       = length(aws_iam_role.ebs_csi) > 0 ? aws_iam_role.ebs_csi[0].arn : ""
+  value       = aws_iam_role.ebs_csi.arn
 }
 
 output "aws_lb_controller_role_arn" {
   description = "The ARN of the AWS Load Balancer Controller IAM Role"
-  value       = length(aws_iam_role.aws_lb_controller) > 0 ? aws_iam_role.aws_lb_controller[0].arn : ""
+  value       = aws_iam_role.aws_lb_controller.arn
 }
 
 output "cluster_autoscaler_role_arn" {
   description = "The ARN of the Cluster Autoscaler IAM Role"
-  value       = length(aws_iam_role.cluster_autoscaler) > 0 ? aws_iam_role.cluster_autoscaler[0].arn : ""
+  value       = aws_iam_role.cluster_autoscaler.arn
 }

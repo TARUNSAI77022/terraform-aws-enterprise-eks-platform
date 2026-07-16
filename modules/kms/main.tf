@@ -14,6 +14,10 @@ resource "aws_kms_key" "eks" {
       Name = "${var.project_name}-${var.environment}-kms-eks"
     }
   )
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_kms_alias" "eks" {
@@ -34,6 +38,10 @@ resource "aws_kms_key" "cloudwatch" {
       Name = "${var.project_name}-${var.environment}-kms-cloudwatch"
     }
   )
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_kms_alias" "cloudwatch" {
@@ -54,6 +62,10 @@ resource "aws_kms_key" "ecr" {
       Name = "${var.project_name}-${var.environment}-kms-ecr"
     }
   )
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_kms_alias" "ecr" {

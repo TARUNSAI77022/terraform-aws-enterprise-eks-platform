@@ -19,6 +19,10 @@ resource "aws_ecr_repository" "this" {
       ManagedBy = "Terraform"
     }
   )
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_ecr_lifecycle_policy" "this" {

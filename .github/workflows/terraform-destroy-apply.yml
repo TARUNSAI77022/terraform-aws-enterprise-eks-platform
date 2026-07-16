@@ -123,7 +123,17 @@ jobs:
 
     - name: Terraform Apply Destroy
       working-directory: ./env/${{ inputs.environment }}
-      run: terraform apply -input=false tfplan-destroy
+      run: |
+        echo "=== Removing unreachable Kubernetes & Helm resources from state ==="
+        terraform state rm module.cluster_autoscaler.helm_release.cluster_autoscaler || true
+        terraform state rm module.aws_load_balancer_controller.helm_release.aws_load_balancer_controller || true
+        terraform state rm module.addons.aws_eks_addon.coredns[0] || true
+        terraform state rm module.addons.aws_eks_addon.kube_proxy[0] || true
+        terraform state rm module.ebs_csi.aws_eks_addon.ebs_csi || true
+        terraform state rm module.vpc_cni.aws_eks_addon.vpc_cni[0] || true
+        
+        echo "=== Executing Teardown of remaining resources ==="
+        terraform destroy -auto-approve -input=false
 
     - name: Calculate Duration
       id: duration

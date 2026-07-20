@@ -121,6 +121,10 @@ jobs:
         fi
         echo "Plan validation successful!"
 
+    - name: Generate Pre-Destroy State Backup
+      working-directory: ./env/${{ inputs.environment }}
+      run: terraform show -json > state-backup.json
+
     - name: Terraform Apply Destroy
       working-directory: ./env/${{ inputs.environment }}
       run: |
@@ -148,46 +152,20 @@ jobs:
         echo "=== Executing Teardown of remaining resources ==="
         terraform destroy -auto-approve -input=false
 
-    - name: Cleanup AWS Service-Linked Roles
+    - name: Execute Safe IAM Roles Cleanup
+      if: success()
+      working-directory: ./env/${{ inputs.environment }}
       run: |
-        echo "=== Cleaning up AWS Service-Linked Roles ==="
-        ROLES=(
-          "AWSServiceRoleForAmazonEKS"
-          "AWSServiceRoleForAmazonEKSNodegroup"
-          "AWSServiceRoleForAutoScaling"
-          "AWSServiceRoleForEC2Spot"
-          "AWSServiceRoleForResourceExplorer"
-        )
-        for role in "${ROLES[@]}"; do
-          if aws iam get-role --role-name "$role" >/dev/null 2>&1; then
-            echo "Service-linked role $role exists. Attempting deletion..."
-            
-            SUCCESS=false
-            for attempt in {1..5}; do
-              OUTPUT=$(aws iam delete-service-linked-role --role-name "$role" --query "DeletionTaskId" --output text 2>&1 || true)
-              
-              if [[ "$OUTPUT" == *"An error occurred"* ]]; then
-                echo "Attempt $attempt: Could not delete $role. Reason: $OUTPUT"
-                if [[ "$OUTPUT" == *"still in use"* ]]; then
-                  echo "Waiting 15 seconds for resources to release in AWS..."
-                  sleep 15
-                else
-                  break
-                fi
-              else
-                echo "Deletion task successfully initiated for $role. Task ID: $OUTPUT"
-                SUCCESS=true
-                break
-              fi
-            done
-            
-            if [ "$SUCCESS" = false ]; then
-              echo "Warning: Service-linked role $role could not be deleted after retries. It may be in use by other EKS clusters or Auto Scaling Groups in this AWS account."
-            fi
-          else
-            echo "Service-linked role $role does not exist, skipping."
-          fi
-        done
+        echo "=== Installing script dependencies ==="
+        python -m pip install --upgrade pip
+        python -m pip install boto3
+        
+        echo "=== Executing IAM Roles Cleanup ==="
+        python ../../scripts/cleanup_iam_roles.py --state state-backup.json --region ap-south-1
+        
+        if [ -f iam-cleanup-report.md ]; then
+          cat iam-cleanup-report.md >> $GITHUB_STEP_SUMMARY
+        fi
 
     - name: Calculate Duration
       id: duration

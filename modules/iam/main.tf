@@ -1,4 +1,66 @@
 # ------------------------------------------------------------------------------
+# 0. IAM Policy Config Validation & Locals & Moved Blocks
+# ------------------------------------------------------------------------------
+resource "terraform_data" "validate_lb_controller_policy_config" {
+  lifecycle {
+    precondition {
+      condition     = !(var.create_lb_controller_policy && var.use_existing_lb_controller_policy)
+      error_message = "Conflicting config: create_lb_controller_policy and use_existing_lb_controller_policy cannot both be true."
+    }
+    precondition {
+      condition     = var.create_lb_controller_policy || var.use_existing_lb_controller_policy
+      error_message = "Invalid config: At least one of create_lb_controller_policy or use_existing_lb_controller_policy must be true."
+    }
+    precondition {
+      condition     = !var.use_existing_lb_controller_policy || (var.existing_lb_controller_policy_arn != null && var.existing_lb_controller_policy_arn != "")
+      error_message = "Invalid config: existing_lb_controller_policy_arn must be provided when use_existing_lb_controller_policy is true."
+    }
+  }
+}
+
+resource "terraform_data" "validate_cluster_autoscaler_policy_config" {
+  lifecycle {
+    precondition {
+      condition     = !(var.create_cluster_autoscaler_policy && var.use_existing_cluster_autoscaler_policy)
+      error_message = "Conflicting config: create_cluster_autoscaler_policy and use_existing_cluster_autoscaler_policy cannot both be true."
+    }
+    precondition {
+      condition     = var.create_cluster_autoscaler_policy || var.use_existing_cluster_autoscaler_policy
+      error_message = "Invalid config: At least one of create_cluster_autoscaler_policy or use_existing_cluster_autoscaler_policy must be true."
+    }
+    precondition {
+      condition     = !var.use_existing_cluster_autoscaler_policy || (var.existing_cluster_autoscaler_policy_arn != null && var.existing_cluster_autoscaler_policy_arn != "")
+      error_message = "Invalid config: existing_cluster_autoscaler_policy_arn must be provided when use_existing_cluster_autoscaler_policy is true."
+    }
+  }
+}
+
+locals {
+  lb_controller_policy_arn      = var.use_existing_lb_controller_policy ? var.existing_lb_controller_policy_arn : aws_iam_policy.aws_load_balancer_controller[0].arn
+  cluster_autoscaler_policy_arn = var.use_existing_cluster_autoscaler_policy ? var.existing_cluster_autoscaler_policy_arn : aws_iam_policy.cluster_autoscaler[0].arn
+}
+
+moved {
+  from = aws_iam_policy.aws_load_balancer_controller
+  to   = aws_iam_policy.aws_load_balancer_controller[0]
+}
+
+moved {
+  from = aws_iam_policy.cluster_autoscaler
+  to   = aws_iam_policy.cluster_autoscaler[0]
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.aws_lb_controller
+  to   = aws_iam_role_policy_attachment.aws_lb_controller[0]
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.cluster_autoscaler
+  to   = aws_iam_role_policy_attachment.cluster_autoscaler[0]
+}
+
+# ------------------------------------------------------------------------------
 # 1. EKS Cluster IAM Role
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "eks_cluster" {
@@ -161,6 +223,7 @@ data "aws_iam_policy_document" "aws_lb_controller_trust" {
 
 # tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_policy" "aws_load_balancer_controller" {
+  count       = (var.create_lb_controller_policy && !var.use_existing_lb_controller_policy) ? 1 : 0
   # checkov:skip=CKV_AWS_289:Wildcard/restrictable action is required by AWS Load Balancer Controller design
   # checkov:skip=CKV_AWS_290:Wildcard/restrictable action is required by AWS Load Balancer Controller design
   # checkov:skip=CKV_AWS_355:Wildcard/restrictable action is required by AWS Load Balancer Controller design
@@ -375,7 +438,8 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
 }
 
 resource "aws_iam_role_policy_attachment" "aws_lb_controller" {
-  policy_arn = aws_iam_policy.aws_load_balancer_controller.arn
+  count      = (var.create_lb_controller_policy || var.use_existing_lb_controller_policy) ? 1 : 0
+  policy_arn = local.lb_controller_policy_arn
   role       = aws_iam_role.aws_lb_controller.name
 }
 
@@ -418,6 +482,7 @@ data "aws_iam_policy_document" "cluster_autoscaler_trust" {
 
 # tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_policy" "cluster_autoscaler" {
+  count       = (var.create_cluster_autoscaler_policy && !var.use_existing_cluster_autoscaler_policy) ? 1 : 0
   # checkov:skip=CKV_AWS_290:Wildcard/restrictable action is required by EKS Cluster Autoscaler design
   # checkov:skip=CKV_AWS_355:Wildcard/restrictable action is required by EKS Cluster Autoscaler design
   name        = "${var.project_name}-${var.environment}-cluster-autoscaler-policy"
@@ -453,7 +518,8 @@ resource "aws_iam_policy" "cluster_autoscaler" {
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_autoscaler" {
-  policy_arn = aws_iam_policy.cluster_autoscaler.arn
+  count      = (var.create_cluster_autoscaler_policy || var.use_existing_cluster_autoscaler_policy) ? 1 : 0
+  policy_arn = local.cluster_autoscaler_policy_arn
   role       = aws_iam_role.cluster_autoscaler.name
 }
 

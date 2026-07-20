@@ -32,3 +32,52 @@ variable "create_oidc_provider" {
   type        = bool
   default     = true
 }
+
+# IAM Policies Creation Feature Flags
+variable "create_lb_controller_policy" {
+  description = "Whether to create the IAM policy for AWS Load Balancer Controller"
+  type        = bool
+  default     = true
+}
+
+variable "create_cluster_autoscaler_policy" {
+  description = "Whether to create the IAM policy for EKS Cluster Autoscaler"
+  type        = bool
+  default     = true
+}
+
+# IAM Policies Reuse Settings
+variable "use_existing_lb_controller_policy" {
+  description = "Whether to reuse an existing IAM policy for AWS Load Balancer Controller"
+  type        = bool
+  default     = false
+}
+
+variable "existing_lb_controller_policy_arn" {
+  description = "The ARN of the existing IAM policy for AWS Load Balancer Controller"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.existing_lb_controller_policy_arn == "" || can(regex("^arn:aws:iam::[0-9]{12}:policy/.*$", var.existing_lb_controller_policy_arn))
+    error_message = "The AWS Load Balancer Controller existing policy ARN must be a valid IAM policy ARN."
+  }
+}
+
+variable "use_existing_cluster_autoscaler_policy" {
+  description = "Whether to reuse an existing IAM policy for EKS Cluster Autoscaler"
+  type        = bool
+  default     = false
+}
+
+variable "existing_cluster_autoscaler_policy_arn" {
+  description = "The ARN of the existing IAM policy for EKS Cluster Autoscaler"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.existing_cluster_autoscaler_policy_arn == "" || can(regex("^arn:aws:iam::[0-9]{12}:policy/.*$", var.existing_cluster_autoscaler_policy_arn))
+    error_message = "The EKS Cluster Autoscaler existing policy ARN must be a valid IAM policy ARN."
+  }
+}
+

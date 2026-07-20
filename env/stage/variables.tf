@@ -286,3 +286,96 @@ variable "node_groups" {
     }
   }
 }
+
+# IAM Policies configuration variables
+variable "create_lb_controller_policy" {
+  description = "Whether to create the custom IAM policy for AWS Load Balancer Controller"
+  type        = bool
+  default     = true
+}
+
+variable "create_cluster_autoscaler_policy" {
+  description = "Whether to create the custom IAM policy for EKS Cluster Autoscaler"
+  type        = bool
+  default     = true
+}
+
+variable "use_existing_lb_controller_policy" {
+  description = "Whether to reuse an existing IAM policy for AWS Load Balancer Controller"
+  type        = bool
+  default     = false
+}
+
+variable "existing_lb_controller_policy_arn" {
+  description = "ARN of the existing IAM policy for AWS Load Balancer Controller"
+  type        = string
+  default     = ""
+}
+
+variable "use_existing_cluster_autoscaler_policy" {
+  description = "Whether to reuse an existing IAM policy for EKS Cluster Autoscaler"
+  type        = bool
+  default     = false
+}
+
+variable "existing_cluster_autoscaler_policy_arn" {
+  description = "ARN of the existing IAM policy for EKS Cluster Autoscaler"
+  type        = string
+  default     = ""
+}
+
+# KMS Keys configuration variables
+variable "create_eks_kms" {
+  description = "Whether to create the KMS key for EKS"
+  type        = bool
+  default     = true
+}
+
+variable "create_cloudwatch_kms" {
+  description = "Whether to create the KMS key for CloudWatch"
+  type        = bool
+  default     = true
+}
+
+variable "create_ecr_kms" {
+  description = "Whether to create the KMS key for ECR"
+  type        = bool
+  default     = true
+}
+
+variable "use_existing_eks_kms" {
+  description = "Whether to reuse an existing KMS key for EKS"
+  type        = bool
+  default     = false
+}
+
+variable "existing_eks_kms_alias" {
+  description = "Alias of the existing KMS key for EKS (e.g. alias/custom-eks-key)"
+  type        = string
+  default     = ""
+}
+
+variable "use_existing_cloudwatch_kms" {
+  description = "Whether to reuse an existing KMS key for CloudWatch"
+  type        = bool
+  default     = false
+}
+
+variable "existing_cloudwatch_kms_alias" {
+  description = "Alias of the existing KMS key for CloudWatch"
+  type        = string
+  default     = ""
+}
+
+variable "use_existing_ecr_kms" {
+  description = "Whether to reuse an existing KMS key for ECR"
+  type        = bool
+  default     = false
+}
+
+variable "existing_ecr_kms_alias" {
+  description = "Alias of the existing KMS key for ECR"
+  type        = string
+  default     = ""
+}
+

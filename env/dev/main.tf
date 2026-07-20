@@ -77,6 +77,16 @@ module "kms" {
   project_name = var.project_name
   environment  = var.environment
   tags         = local.tags
+
+  create_eks_kms                = var.create_eks_kms
+  create_cloudwatch_kms         = var.create_cloudwatch_kms
+  create_ecr_kms                = var.create_ecr_kms
+  use_existing_eks_kms          = var.use_existing_eks_kms
+  existing_eks_kms_alias        = var.existing_eks_kms_alias
+  use_existing_cloudwatch_kms   = var.use_existing_cloudwatch_kms
+  existing_cloudwatch_kms_alias = var.existing_cloudwatch_kms_alias
+  use_existing_ecr_kms          = var.use_existing_ecr_kms
+  existing_ecr_kms_alias        = var.existing_ecr_kms_alias
 }
 
 # ------------------------------------------------------------------------------
@@ -91,6 +101,13 @@ module "iam" {
   oidc_provider_arn    = module.eks.oidc_provider_arn
   oidc_provider_url    = module.eks.oidc_provider_url
   tags                 = local.tags
+
+  create_lb_controller_policy            = var.create_lb_controller_policy
+  create_cluster_autoscaler_policy       = var.create_cluster_autoscaler_policy
+  use_existing_lb_controller_policy      = var.use_existing_lb_controller_policy
+  existing_lb_controller_policy_arn      = var.existing_lb_controller_policy_arn
+  use_existing_cluster_autoscaler_policy = var.use_existing_cluster_autoscaler_policy
+  existing_cluster_autoscaler_policy_arn = var.existing_cluster_autoscaler_policy_arn
 }
 
 # ------------------------------------------------------------------------------

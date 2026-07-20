@@ -65,11 +65,11 @@ jobs:
         key: terraform-providers-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
         restore-keys: |
           terraform-providers-${{ runner.os }}-
-
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.5.0
+        terraform_wrapper: false
 
     - name: Download Destroy Plan Artifact
       uses: actions/download-artifact@v4
@@ -124,13 +124,26 @@ jobs:
     - name: Terraform Apply Destroy
       working-directory: ./env/${{ inputs.environment }}
       run: |
-        echo "=== Removing unreachable Kubernetes & Helm resources from state ==="
-        terraform state rm module.cluster_autoscaler.helm_release.cluster_autoscaler || true
-        terraform state rm module.aws_load_balancer_controller.helm_release.aws_load_balancer_controller || true
-        terraform state rm module.addons.aws_eks_addon.coredns[0] || true
-        terraform state rm module.addons.aws_eks_addon.kube_proxy[0] || true
-        terraform state rm module.ebs_csi.aws_eks_addon.ebs_csi || true
-        terraform state rm module.vpc_cni.aws_eks_addon.vpc_cni[0] || true
+        echo "=== Checking state for unreachable Kubernetes & Helm resources ==="
+        STATE_LIST=$(terraform state list || true)
+        
+        RESOURCES_TO_REMOVE=(
+          "module.cluster_autoscaler.helm_release.cluster_autoscaler"
+          "module.aws_load_balancer_controller.helm_release.aws_load_balancer_controller"
+          "module.addons.aws_eks_addon.coredns[0]"
+          "module.addons.aws_eks_addon.kube_proxy[0]"
+          "module.ebs_csi.aws_eks_addon.ebs_csi"
+          "module.vpc_cni.aws_eks_addon.vpc_cni[0]"
+        )
+        
+        for res in "${RESOURCES_TO_REMOVE[@]}"; do
+          if echo "$STATE_LIST" | grep -Fq "$res"; then
+            echo "Removing $res from state..."
+            terraform state rm "$res" || true
+          else
+            echo "Resource $res not found in state, skipping."
+          fi
+        done
         
         echo "=== Executing Teardown of remaining resources ==="
         terraform destroy -auto-approve -input=false

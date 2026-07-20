@@ -223,7 +223,7 @@ data "aws_iam_policy_document" "aws_lb_controller_trust" {
 
 # tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_policy" "aws_load_balancer_controller" {
-  count       = (var.create_lb_controller_policy && !var.use_existing_lb_controller_policy) ? 1 : 0
+  count = (var.create_lb_controller_policy && !var.use_existing_lb_controller_policy) ? 1 : 0
   # checkov:skip=CKV_AWS_289:Wildcard/restrictable action is required by AWS Load Balancer Controller design
   # checkov:skip=CKV_AWS_290:Wildcard/restrictable action is required by AWS Load Balancer Controller design
   # checkov:skip=CKV_AWS_355:Wildcard/restrictable action is required by AWS Load Balancer Controller design
@@ -482,7 +482,7 @@ data "aws_iam_policy_document" "cluster_autoscaler_trust" {
 
 # tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_policy" "cluster_autoscaler" {
-  count       = (var.create_cluster_autoscaler_policy && !var.use_existing_cluster_autoscaler_policy) ? 1 : 0
+  count = (var.create_cluster_autoscaler_policy && !var.use_existing_cluster_autoscaler_policy) ? 1 : 0
   # checkov:skip=CKV_AWS_290:Wildcard/restrictable action is required by EKS Cluster Autoscaler design
   # checkov:skip=CKV_AWS_355:Wildcard/restrictable action is required by EKS Cluster Autoscaler design
   name        = "${var.project_name}-${var.environment}-cluster-autoscaler-policy"

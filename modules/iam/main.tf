@@ -591,15 +591,8 @@ moved {
   to   = aws_iam_role.aws_lb_controller
 }
 moved {
-  from = aws_iam_role_policy_attachment.aws_lb_controller[0]
-  to   = aws_iam_role_policy_attachment.aws_lb_controller
-}
-moved {
   from = aws_iam_role.cluster_autoscaler[0]
   to   = aws_iam_role.cluster_autoscaler
 }
-moved {
-  from = aws_iam_role_policy_attachment.cluster_autoscaler[0]
-  to   = aws_iam_role_policy_attachment.cluster_autoscaler
-}
+
 

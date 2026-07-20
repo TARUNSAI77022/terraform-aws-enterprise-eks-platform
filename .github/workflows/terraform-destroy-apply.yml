@@ -148,12 +148,28 @@ jobs:
         for role in "${ROLES[@]}"; do
           if aws iam get-role --role-name "$role" >/dev/null 2>&1; then
             echo "Service-linked role $role exists. Attempting deletion..."
-            # Capture output and prevent command failure from crashing the step
-            OUTPUT=$(aws iam delete-service-linked-role --role-name "$role" --query "DeletionTaskId" --output text 2>&1 || true)
-            if [[ "$OUTPUT" == *"An error occurred"* ]]; then
-              echo "Warning: Could not delete service-linked role $role. Reason: $OUTPUT"
-            else
-              echo "Deletion task successfully initiated for $role. Task ID: $OUTPUT"
+            
+            SUCCESS=false
+            for attempt in {1..5}; do
+              OUTPUT=$(aws iam delete-service-linked-role --role-name "$role" --query "DeletionTaskId" --output text 2>&1 || true)
+              
+              if [[ "$OUTPUT" == *"An error occurred"* ]]; then
+                echo "Attempt $attempt: Could not delete $role. Reason: $OUTPUT"
+                if [[ "$OUTPUT" == *"still in use"* ]]; then
+                  echo "Waiting 15 seconds for resources to release in AWS..."
+                  sleep 15
+                else
+                  break
+                fi
+              else
+                echo "Deletion task successfully initiated for $role. Task ID: $OUTPUT"
+                SUCCESS=true
+                break
+              fi
+            done
+            
+            if [ "$SUCCESS" = false ]; then
+              echo "Warning: Service-linked role $role could not be deleted after retries. It may be in use by other EKS clusters or Auto Scaling Groups in this AWS account."
             fi
           else
             echo "Service-linked role $role does not exist, skipping."

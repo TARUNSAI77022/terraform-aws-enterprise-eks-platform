@@ -69,3 +69,9 @@ variable "alb_ingress_cidr_blocks" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+variable "enable_database_networking" {
+  description = "Whether to provision the database security group"
+  type        = bool
+  default     = true
+}

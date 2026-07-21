@@ -27,6 +27,7 @@ module "vpc" {
   public_subnet_cidrs   = var.public_subnet_cidrs
   private_subnet_cidrs  = var.private_subnet_cidrs
   database_subnet_cidrs = var.database_subnet_cidrs
+  enable_database_networking = var.enable_database_networking
 
   # Production High Availability NAT setting (one NAT per AZ)
   enable_nat_gateway = true
@@ -58,6 +59,7 @@ module "security_groups" {
   project_name            = var.project_name
   environment             = var.environment
   alb_ingress_cidr_blocks = var.alb_ingress_cidr_blocks
+  enable_database_networking = var.enable_database_networking
 
   # Standard Tagging Parameters
   application         = var.application

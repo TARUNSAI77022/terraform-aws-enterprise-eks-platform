@@ -103,6 +103,12 @@ variable "single_nat_gateway" {
   default     = false
 }
 
+variable "enable_database_networking" {
+  description = "Whether to provision database subnets and related networking resources"
+  type        = bool
+  default     = true
+}
+
 # ------------------------------------------------------------------------------
 # Logging Requirements
 # ------------------------------------------------------------------------------

@@ -104,6 +104,7 @@ resource "aws_network_acl" "private" {
 # ------------------------------------------------------------------------------
 resource "aws_network_acl" "database" {
   #checkov:skip=CKV2_AWS_1:NACLs are explicitly attached to subnets using the subnet_ids attribute.
+  count      = var.enable_database_networking ? 1 : 0
   vpc_id     = aws_vpc.main.id
   subnet_ids = aws_subnet.database[*].id
 
@@ -133,4 +134,9 @@ resource "aws_network_acl" "database" {
       Name = "${var.project_name}-${var.environment}-nacl-database"
     }
   )
+}
+
+moved {
+  from = aws_network_acl.database
+  to   = aws_network_acl.database[0]
 }

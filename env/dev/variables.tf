@@ -276,14 +276,6 @@ variable "node_groups" {
       desired_size   = 2
       disk_size      = 50
     }
-    applications = {
-      instance_types = ["t3.micro"]
-      capacity_type  = "SPOT"
-      min_size       = 1
-      max_size       = 5
-      desired_size   = 2
-      disk_size      = 50
-    }
   }
 }
 
@@ -377,5 +369,11 @@ variable "existing_ecr_kms_alias" {
   description = "Alias of the existing KMS key for ECR"
   type        = string
   default     = ""
+}
+
+variable "enable_database_networking" {
+  description = "Whether to enable private database networking and security resources"
+  type        = bool
+  default     = false
 }
 

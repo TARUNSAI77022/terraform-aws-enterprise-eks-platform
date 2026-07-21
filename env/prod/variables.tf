@@ -379,3 +379,9 @@ variable "existing_ecr_kms_alias" {
   default     = ""
 }
 
+variable "enable_database_networking" {
+  description = "Whether to enable private database networking and security resources"
+  type        = bool
+  default     = true
+}
+

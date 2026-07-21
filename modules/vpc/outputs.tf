@@ -25,7 +25,7 @@ output "database_subnet_ids" {
 
 output "database_subnet_group_name" {
   description = "The name of the database subnet group"
-  value       = aws_db_subnet_group.database.name
+  value       = var.enable_database_networking ? aws_db_subnet_group.database[0].name : null
 }
 
 output "internet_gateway_id" {
@@ -55,7 +55,7 @@ output "private_route_table_ids" {
 
 output "database_route_table_id" {
   description = "The ID of the database route table"
-  value       = aws_route_table.database.id
+  value       = var.enable_database_networking ? aws_route_table.database[0].id : null
 }
 
 output "vpc_endpoint_sg_id" {

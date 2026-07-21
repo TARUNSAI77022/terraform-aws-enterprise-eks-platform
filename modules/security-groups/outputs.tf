@@ -15,7 +15,7 @@ output "ssm_bastion_sg_id" {
 
 output "db_sg_id" {
   description = "The ID of the PostgreSQL Database Security Group"
-  value       = aws_security_group.db_sg.id
+  value       = var.enable_database_networking ? aws_security_group.db_sg[0].id : null
 }
 
 output "eks_cluster_sg_id" {

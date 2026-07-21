@@ -101,7 +101,7 @@ resource "aws_subnet" "private" {
 
 # Private Database Subnets (isolated local routing only)
 resource "aws_subnet" "database" {
-  count             = length(var.database_subnet_cidrs)
+  count             = var.enable_database_networking ? length(var.database_subnet_cidrs) : 0
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.database_subnet_cidrs[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -118,6 +118,7 @@ resource "aws_subnet" "database" {
 # DB Subnet Group (for Multi-AZ RDS Deployment)
 # ------------------------------------------------------------------------------
 resource "aws_db_subnet_group" "database" {
+  count       = var.enable_database_networking ? 1 : 0
   name        = "${var.project_name}-${var.environment}-db-subnet-group"
   description = "Isolated database subnet group for RDS/PostgreSQL"
   subnet_ids  = aws_subnet.database[*].id
@@ -203,6 +204,7 @@ resource "aws_route_table" "private" {
 
 # Database Route Table (strictly isolated)
 resource "aws_route_table" "database" {
+  count  = var.enable_database_networking ? 1 : 0
   vpc_id = aws_vpc.main.id
 
   tags = merge(
@@ -231,7 +233,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_route_table_association" "database" {
   count          = length(aws_subnet.database)
   subnet_id      = aws_subnet.database[count.index].id
-  route_table_id = aws_route_table.database.id
+  route_table_id = aws_route_table.database[0].id
 }
 
 # ------------------------------------------------------------------------------
@@ -309,3 +311,17 @@ resource "aws_iam_role_policy" "vpc_flow_log_policy" {
     ]
   })
 }
+
+# ------------------------------------------------------------------------------
+# State Migration Moved Blocks (Handle count transition for Stage/Prod)
+# ------------------------------------------------------------------------------
+moved {
+  from = aws_db_subnet_group.database
+  to   = aws_db_subnet_group.database[0]
+}
+
+moved {
+  from = aws_route_table.database
+  to   = aws_route_table.database[0]
+}
+

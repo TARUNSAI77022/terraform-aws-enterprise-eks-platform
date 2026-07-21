@@ -52,7 +52,8 @@ resource "aws_vpc_endpoint" "s3" {
 # Collect all route table IDs (public, private, and database tables)
 locals {
   all_route_table_ids = concat(
-    [aws_route_table.public.id, aws_route_table.database.id],
+    [aws_route_table.public.id],
+    aws_route_table.database[*].id,
     aws_route_table.private[*].id
   )
 }

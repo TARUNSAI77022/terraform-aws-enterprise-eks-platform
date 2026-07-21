@@ -182,7 +182,7 @@ resource "aws_security_group" "ssm_bastion_sg" {
 # 4. PostgreSQL RDS Database Security Group
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "db_sg" {
-  count       = var.enable_database_networking ? 1 : 0
+  count = var.enable_database_networking ? 1 : 0
   #checkov:skip=CKV2_AWS_5:Security groups are designed to be attached to compute/database resources during subsequent deployment phases.
   name        = "${var.project_name}-${var.environment}-db-sg"
   description = "Security group for private PostgreSQL database"

@@ -21,12 +21,12 @@ locals {
 module "vpc" {
   source = "../../modules/vpc"
 
-  project_name          = var.project_name
-  environment           = var.environment
-  vpc_cidr              = var.vpc_cidr
-  public_subnet_cidrs   = var.public_subnet_cidrs
-  private_subnet_cidrs  = var.private_subnet_cidrs
-  database_subnet_cidrs = var.database_subnet_cidrs
+  project_name               = var.project_name
+  environment                = var.environment
+  vpc_cidr                   = var.vpc_cidr
+  public_subnet_cidrs        = var.public_subnet_cidrs
+  private_subnet_cidrs       = var.private_subnet_cidrs
+  database_subnet_cidrs      = var.database_subnet_cidrs
   enable_database_networking = var.enable_database_networking
 
   # Staging budget-friendly NAT gateway setting
@@ -55,10 +55,10 @@ module "vpc" {
 module "security_groups" {
   source = "../../modules/security-groups"
 
-  vpc_id                  = module.vpc.vpc_id
-  project_name            = var.project_name
-  environment             = var.environment
-  alb_ingress_cidr_blocks = var.alb_ingress_cidr_blocks
+  vpc_id                     = module.vpc.vpc_id
+  project_name               = var.project_name
+  environment                = var.environment
+  alb_ingress_cidr_blocks    = var.alb_ingress_cidr_blocks
   enable_database_networking = var.enable_database_networking
 
   # Standard Tagging Parameters
